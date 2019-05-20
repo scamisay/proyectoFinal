@@ -100,16 +100,36 @@ El método apply devuelve un número que indica que tan buena fue la acción par
 
 ## Casos de aplicación
 Implementando algunas clases clave sobre la estructura base se puede aplicar el comportamiento descritpto en otros casos específicos.
+
 ### Lucha contra incendios
 Los agentes son drones hidrantes con una capacidad de almacenamiento de agua y un alcance para disparar agua.
-Los objetivos son los focos de fuego. Estos pueden reproducirse dependiendo de las condiciones del entorno como el viento.
+Los objetivos son los focos de fuego. 
+Estos pueden reproducirse dependiendo de las condiciones del entorno como el viento.
 Hay puntos de recarga de agua y de energía donde los agentes después de actuar sobre el fuego tienen que recargar.
+Tendrian sensores visuales, de temperatura y de viento.
 
 ### Lucha contra la sequia de un campo
+Los agentes son drones con aspersores. 
+Los objetivos con áreas fijas donde esta faltando agua.
+Hay puntos para cargar agua y energía.
+Los drones se distribuyen el area de acuedo a la sequedad observada por su visión.
 
-### Terapeutas
+### Control de infecciones en una población
+Los agentes seran los terapeutas.
+Los objetivos los ciudadanos infectados.
+Un ciuidadano puedo no saber que esta infectado pero presentará sintomas.
+Los terapeutas los convenceran de que se hagan tratatar y de que no contagien a la población.
+Los terapeutas pueden sospechar que las personas que tuvieron contacto con los infectados pudieron haber contraido la infeccion, de esta manera pueden actuar antes evitando que la epidemia se disperse.
+
+### Eliminación de tumores malignos
+Los agentes son nanobots en el torrente sanguineo. 
+Puden moverse y buscar sus objetivos que son las células cancérigenas. 
+Actuan sobre las mismas destruyendolas.
+Un agente que encuentre células cancerigenas avisa al resto para que lo ayuden a destruir el tumor.
+Los agentes pueden aprender a distinguir un tumor por el color, la forma o alguna propiedad de la célula.
 
 ### Prevención de delitos con drones
+
 
 | proyecto    | objetivo              | agentes | aprendizaje                                           | requisito               |
 |-------------|-----------------------|---------|-------------------------------------------------------|-------------------------|
