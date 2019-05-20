@@ -129,6 +129,11 @@ Un agente que encuentre células cancerigenas avisa al resto para que lo ayuden 
 Los agentes pueden aprender a distinguir un tumor por el color, la forma o alguna propiedad de la célula.
 
 ### Prevención de delitos con drones
+Los agenetes son drones con cámara que buscan conflictos en la via publica.
+De encontrar algun conflicto alerta a la policía. 
+Para sospechar o prevenir delitos se mueve a donde cree que puede ocurrir alguno.
+Puede aprender patrones de comportamiento.
+De necesitar ayuda para procesar movimientos de masas puede llamar a otros agentes.
 
 
 | proyecto    | objetivo              | agentes | aprendizaje                                           | requisito               |
