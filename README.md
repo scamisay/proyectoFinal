@@ -101,9 +101,20 @@ El método apply devuelve un número que indica que tan buena fue la acción par
 ## Casos de aplicación
 Implementando algunas clases clave sobre la estructura base se puede aplicar el comportamiento descritpto en otros casos específicos.
 ### Lucha contra incendios
+Los agentes son drones hidrantes con una capacidad de almacenamiento de agua y un alcance para disparar agua.
+Los objetivos son los focos de fuego. Estos pueden reproducirse dependiendo de las condiciones del entorno como el viento.
+Hay puntos de recarga de agua y de energía donde los agentes después de actuar sobre el fuego tienen que recargar.
 
 ### Lucha contra la sequia de un campo
 
 ### Terapeutas
 
 ### Prevención de delitos con drones
+
+| proyecto    | objetivo              | agentes | aprendizaje                                           | requisito               |
+|-------------|-----------------------|---------|-------------------------------------------------------|-------------------------|
+| incendios   | fijo/reproducible     | móviles | disparo dependiente del viento                        | carga de agua y energía |
+| sequía      | fijo/reproducible     | móviles | cantidad de riego dependiendo de variables climáticas | carga de agua y energía |
+| infecciones | móviles/reproducibles | móviles | detectar síntomas                                     |                         |
+| tumores     | fijo/reproducible     | móviles | color de la célula                 |               |
+| delitos     | móvil                 | móviles | movimiento de un grupo de personas | carga energía |
