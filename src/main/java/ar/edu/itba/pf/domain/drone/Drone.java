@@ -1,6 +1,7 @@
 package ar.edu.itba.pf.domain.drone;
 
 
+import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.objects.DroneObject;
 
 public class Drone implements DroneObject {
@@ -11,6 +12,8 @@ public class Drone implements DroneObject {
     private Tuple3D velocity;
     private double water;
     private double energy;
+
+    //private Cell cell;
 
     private static final double HEIGHT = 1;
 
@@ -30,6 +33,22 @@ public class Drone implements DroneObject {
 
     @Override
     public double getZ() {
+        return 0;
+    }
+
+    @Override
+    public String getCharacterRepresentarion() {
+        return "D";
+    }
+
+    @Override
+    public void setCell(Cell cell) {
+      /*  Helper.checkNotNull(cell);
+        this.cell = cell;*/
+    }
+
+    @Override
+    public double evolve() {
         return 0;
     }
 
