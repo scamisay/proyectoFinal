@@ -84,12 +84,21 @@ public class CellTest {
 
     @Test
     public void testRadiationCircularTwoFires(){
-        CellularAutomaton a = createManyTreesOnFireAndGrass(8, 8, Arrays.asList(new Pair(0,0), new Pair(3,3)));
-        Evolver e = new EvolverImpl(a, c -> c.getTime() > 1);
+        CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList(new Pair(0,0), new Pair(7,7)));
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         e.start();
         a.printTemperatures();
         Assert.assertTrue(a!=null);
     }
+
+   /* @Test
+    public void testRadiationCircularTwoFires(){
+        CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList( new Pair(5,5)));
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 7);
+        e.start();
+        a.printTemperatures();
+        Assert.assertTrue(a!=null);
+    }*/
 
     @Test
     public void consumingATree(){

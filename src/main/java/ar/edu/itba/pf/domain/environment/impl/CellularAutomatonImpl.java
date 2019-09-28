@@ -127,7 +127,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
 
     @Override
     public String printTemperatures() {
-        return printer(cell -> String.format("%.2f",cell.getTemperature()));
+        return printer(cell -> String.format("%7.2f",cell.getTemperature()));
     }
 
     @Override

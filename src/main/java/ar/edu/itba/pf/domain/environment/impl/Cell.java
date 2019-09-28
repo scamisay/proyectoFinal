@@ -35,7 +35,7 @@ public class Cell {
         initializeTemperatures();
     }
 
-    private void initializeTemperatures() {
+    public void initializeTemperatures() {
         temperatures = new HashMap<>();
         for(NeighbourOrientation neighbourOrientation : neighbourOrientations){
             temperatures.put(neighbourOrientation, new Double(0));
@@ -118,6 +118,7 @@ public class Cell {
         initializeTemperatures();
     }
 
+
     public void spreadHeat(double irradiatedTemperature){
         temperature += irradiatedTemperature;
         double irradiatedTemperatureToNeighbour = irradiatedTemperature - LOOSE_RADIATION_PER_CELL;
@@ -130,7 +131,6 @@ public class Cell {
 
     private void transferHeatToNeighbourCell(NeighbourOrientation neighbourOrientation, double heat){
         try{
-
             Cell neighbour = getCellFromOrientation(neighbourOrientation);
             neighbour.updateNeighbourTemperature(heat, neighbourOrientation);
         }catch (Exception e){
@@ -138,7 +138,7 @@ public class Cell {
         }
     }
 
-    private void transmitHeatReceived() {
+    public void transmitHeatReceived() {
         neighbourOrientations.forEach( orientation -> {
             /**
              * busco la temperatura que me fue irradiada en esta direccion. Si supera el umbral la transmito
