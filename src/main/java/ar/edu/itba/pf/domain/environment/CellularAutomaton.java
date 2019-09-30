@@ -2,6 +2,7 @@ package ar.edu.itba.pf.domain.environment;
 
 import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
+import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ public interface CellularAutomaton {
     void addElement(int x, int y, EnvironmentObject object);
 
     void addElement(Pair pair, EnvironmentObject object);
+
+    void addWindStrategy(WindStrategy windStrategy);
 
     void evolve();
 
@@ -28,6 +31,8 @@ public interface CellularAutomaton {
     String printObjects();
 
     String printTemperatures();
+
+    String printWind();
 
     List<EnvironmentObject> getCombustionableObjects();
 }

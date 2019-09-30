@@ -3,6 +3,7 @@ package ar.edu.itba.pf.domain.environment.impl;
 
 import ar.edu.itba.pf.domain.Helper;
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
+import ar.edu.itba.pf.domain.environment.PairDouble;
 import ar.edu.itba.pf.domain.environment.exceptions.cellexception.MoreThanOneCombustionObject;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
@@ -18,6 +19,7 @@ public class Cell {
     private int y;
     private CellularAutomaton cellularAutomaton;
     private double temperature = NORMAL_TEMERATURE;
+    private PairDouble wind;
 
     /**
      * constants
@@ -33,6 +35,7 @@ public class Cell {
         this.cellularAutomaton = cellularAutomaton;
         initializeNeighbours();
         initializeTemperatures();
+        wind = PairDouble.ZERO;
     }
 
     public void initializeTemperatures() {
@@ -134,7 +137,9 @@ public class Cell {
             Cell neighbour = getCellFromOrientation(neighbourOrientation);
             neighbour.updateNeighbourTemperature(heat, neighbourOrientation);
         }catch (Exception e){
-            System.out.println(1);
+            /**
+             * no hay hacia donde transferir
+             */
         }
     }
 
@@ -174,12 +179,20 @@ public class Cell {
         temperatures.put(neighbourOrientation, oldTemperature + temperature);
     }
 
+    public void updateWind(double windX, double windY){
+        this.wind = new PairDouble(windX, windY);
+    }
+
     public int getX() {
         return x;
     }
 
     public int getY() {
         return y;
+    }
+
+    public PairDouble getWind() {
+        return wind;
     }
 
     public double getTemperature() {

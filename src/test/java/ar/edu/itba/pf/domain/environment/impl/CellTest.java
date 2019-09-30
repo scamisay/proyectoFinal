@@ -8,6 +8,7 @@ import ar.edu.itba.pf.domain.environment.objects.GroundObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
 import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
+import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static ar.edu.itba.pf.domain.environment.impl.NeighbourOrientation.*;
+import static java.lang.Math.PI;
 
 public class CellTest {
 
@@ -85,6 +87,7 @@ public class CellTest {
     @Test
     public void testRadiationCircularTwoFires(){
         CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList(new Pair(0,0), new Pair(7,7)));
+        a.addWindStrategy(new PolarWind(2,PI/4));
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         e.start();
         a.printTemperatures();

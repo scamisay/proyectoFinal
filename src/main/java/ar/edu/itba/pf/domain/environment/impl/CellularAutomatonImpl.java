@@ -5,13 +5,16 @@ import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.Pair;
 import ar.edu.itba.pf.domain.environment.exceptions.BoundaryException;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
-import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
+import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
+import static java.lang.Math.atan;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -22,6 +25,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     private int t;
     private Cell[][] cells;
     private List<Drone> drones = new ArrayList<>();
+    private WindStrategy windStrategy;
 
     public CellularAutomatonImpl(int width, int height) {
         init(width, height);
@@ -61,6 +65,11 @@ public class CellularAutomatonImpl implements CellularAutomaton {
         object.setCell(cells[pair.x][pair.y]);
     }
 
+    @Override
+    public void addWindStrategy(WindStrategy windStrategy) {
+        this.windStrategy = windStrategy;
+    }
+
     private void checkBoundaries(int x, int y){
         if(x < 0 || x >= width || y < 0 || y >= height){
             throw new BoundaryException(width, height, x, y);
@@ -72,7 +81,21 @@ public class CellularAutomatonImpl implements CellularAutomaton {
         t++;
         for(int x = 0; x < width; x++){
             for (int y = 0; y < height; y++){
-                cells[x][y].evolve();
+                Cell cell = cells[x][y];
+
+                /**
+                 * actualizo el vector viento en la celula de haber una estrategia para el mismo
+                 */
+                if(windStrategy != null){
+                    double windX = windStrategy.getX(x,y,t);
+                    double windY = windStrategy.getX(x,y,t);
+                    cell.updateWind(windX, windY);
+                }
+
+                /**
+                 * evoluciono el estado de la celula
+                 */
+                cell.evolve();
             }
         }
     }
@@ -128,6 +151,17 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     @Override
     public String printTemperatures() {
         return printer(cell -> String.format("%7.2f",cell.getTemperature()));
+    }
+
+    @Override
+    public String printWind() {
+        return printer(cell -> {
+            double x = cell.getWind().x;
+            double y = cell.getWind().y;
+            double modulus = sqrt(x*x + y*y);
+            double angle =  Math.atan2(y, x);
+            return String.format("(%5.2f,%5.2f)",modulus, angle);
+        });
     }
 
     @Override
