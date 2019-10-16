@@ -4,11 +4,13 @@ import ar.edu.itba.pf.domain.engine.Evolver;
 import ar.edu.itba.pf.domain.engine.impl.EvolverImpl;
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.Pair;
+import ar.edu.itba.pf.domain.environment.PairDouble;
 import ar.edu.itba.pf.domain.environment.objects.GroundObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
 import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
 import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
+import ar.edu.itba.pf.domain.helper.VectorHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -76,18 +78,89 @@ public class CellTest {
     }
 
     @Test
-    public void testRadiationCircular(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(6, 6, 0,0);
-        Evolver e = new EvolverImpl(a, c -> c.getTime() > 1);
+    public void testRadiationCircularATreeInAGrassField(){
+        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5);
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 3);
         e.start();
         a.printTemperatures();
         Assert.assertTrue(a!=null);
     }
 
     @Test
+    public void testRadiationCircularATreeInADeadField(){
+        int x=5;
+        int y=5;
+        CellularAutomaton a = createOneTree(11, 11, x,y);
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
+        e.start();
+
+        Cell north = a.getCell(x,y-1);
+        Cell south = a.getCell( x, y+1);
+        Cell west = a.getCell(x-1,y);
+        Cell east = a.getCell(x-1,y);
+
+        Assert.assertTrue(
+                areEqualDouble(north.getTemperature(), south.getTemperature())
+                        &&
+                        areEqualDouble(west.getTemperature(), east.getTemperature() )
+        );
+    }
+
+    @Test
+    public void testRadiationCircularATreeInADeadFieldWithWind(){
+        int x=5;
+        int y=5;
+        CellularAutomaton a = createOneTree(11, 11, x,y);
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
+
+        //viento hacia el norte
+        double angle = (1./2)*PI;
+        a.addWindStrategy(new PolarWind(200, angle));
+        e.start();
+
+        Cell north = a.getCell(x,y-1);
+        Cell south = a.getCell( x, y+1);
+        Cell west = a.getCell(x-1,y);
+        Cell east = a.getCell(x-1,y);
+
+        Assert.assertTrue(
+                (north.getTemperature() > south.getTemperature())
+                            &&
+                        areEqualDouble(west.getTemperature(), east.getTemperature() )
+        );
+    }
+
+    @Test
+    public void testRadiationCircularWithWind(){
+        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5);
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
+        double angle = (1./2)*PI;
+        a.addWindStrategy(new PolarWind(100, angle));
+        e.start();
+        a.printTemperatures();
+        Assert.assertTrue(a!=null);
+    }
+
+    @Test
+    public void testWindOrientationByAngle(){
+        CellularAutomaton a = null;
+        for(int i =0; i<8; i++){
+            a = createOneTreeOnFireAndGrass(11, 11, 5,5);
+            Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
+            double angle = (1./4)*PI*i;
+            a.addWindStrategy(new PolarWind(100, angle));
+            e.start();
+            System.out.println(String.format("angle = %dxPI/4 --- wind = %s",i,a.getCell(0,0).getWind().toString()));
+
+        }
+        Assert.assertTrue(a!=null);
+    }
+
+
+    @Test
     public void testRadiationCircularTwoFires(){
         CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList(new Pair(0,0), new Pair(7,7)));
-        a.addWindStrategy(new PolarWind(2,PI/4));
+        //a.addWindStrategy(new PolarWind(2,PI/4));
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         e.start();
         a.printTemperatures();
@@ -102,6 +175,27 @@ public class CellTest {
         a.printTemperatures();
         Assert.assertTrue(a!=null);
     }*/
+
+   @Test
+   public void testParallelVectors(){
+       PairDouble v1 = new PairDouble(1,1);
+       PairDouble v2 = new PairDouble(4,4);
+       double angle = VectorHelper.angleBetweenVectors(v1,v2);
+       Assert.assertTrue(areEqualDouble(angle,0));
+   }
+
+    @Test
+    public void testPerpendicular(){
+        PairDouble v1 = new PairDouble(1,0);
+        PairDouble v2 = new PairDouble(0,1);
+        double angle = VectorHelper.angleBetweenVectors(v1,v2);
+        Assert.assertTrue(areEqualDouble(angle,PI/2));
+    }
+
+    public static boolean areEqualDouble(double a, double b) {
+        int precision = 5;
+        return Math.abs(a - b) <= Math.pow(10, -precision);
+    }
 
     @Test
     public void consumingATree(){
@@ -138,6 +232,18 @@ public class CellTest {
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {
                 cellularAutomaton.addElement(pair, new GrassCO(1,5));
+            }
+        });
+        return cellularAutomaton;
+    }
+
+    private CellularAutomaton createOneTree(int width, int height, int treeX, int treeY){
+        CellularAutomaton cellularAutomaton = createScenario(width, height);
+        cellularAutomaton.iterate().forEach( pair -> {
+            if(pair.x == treeX && pair.y==treeY){
+                CombustibleObject combustibleObject = new TreeCO(10,100);
+                combustibleObject.setOnFire();
+                cellularAutomaton.addElement(pair, combustibleObject);
             }
         });
         return cellularAutomaton;

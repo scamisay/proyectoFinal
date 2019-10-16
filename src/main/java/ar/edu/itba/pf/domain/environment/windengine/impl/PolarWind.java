@@ -2,6 +2,10 @@ package ar.edu.itba.pf.domain.environment.windengine.impl;
 
 import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 public class PolarWind implements WindStrategy {
 
     private double modulus;
@@ -14,11 +18,11 @@ public class PolarWind implements WindStrategy {
 
     @Override
     public double getX(int x, int y, int t) {
-        return Math.abs(modulus)*Math.cos(angle);
+        return modulus*cos(angle);
     }
 
     @Override
     public double getY(int x, int y, int t) {
-        return Math.abs(modulus)*Math.sin(angle);
+        return modulus*sin(angle);
     }
 }

@@ -10,6 +10,6 @@ public class GrassCO extends CombustibleObject {
 
     @Override
     public String getCharacterRepresentarion() {
-        return "g";
+        return super.getCharacterRepresentarion()+"g";
     }
 }

@@ -43,7 +43,7 @@ public class Drone implements DroneObject {
 
     @Override
     public void setCell(Cell cell) {
-      /*  Helper.checkNotNull(cell);
+      /*  ValidatorHelper.checkNotNull(cell);
         this.cell = cell;*/
     }
 

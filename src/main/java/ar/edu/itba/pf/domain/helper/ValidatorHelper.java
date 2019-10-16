@@ -1,8 +1,8 @@
-package ar.edu.itba.pf.domain;
+package ar.edu.itba.pf.domain.helper;
 
 import java.util.Collection;
 
-public class Helper {
+public class ValidatorHelper {
 
     public static void checkNotNull(Object ... args){
         for(Object andArg : args){

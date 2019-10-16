@@ -22,7 +22,7 @@ public class GroundObject implements FieldObject {
 
     @Override
     public void setCell(Cell cell) {
-        /*Helper.checkNotNull(cell);
+        /*ValidatorHelper.checkNotNull(cell);
         this.cell = cell;*/
     }
 

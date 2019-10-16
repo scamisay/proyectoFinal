@@ -2,6 +2,8 @@ package ar.edu.itba.pf.domain.environment;
 
 import java.util.Objects;
 
+import static java.lang.Math.sqrt;
+
 public class PairDouble {
     public double x;
     public double y;
@@ -34,5 +36,9 @@ public class PairDouble {
     @Override
     public String toString() {
         return String.format("(%5.2f, %5.2f)",x,y);
+    }
+
+    public double getModule() {
+        return sqrt(x*x+y*y);
     }
 }

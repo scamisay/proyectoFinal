@@ -1,5 +1,7 @@
 package ar.edu.itba.pf.domain.environment.impl;
 
+import ar.edu.itba.pf.domain.environment.PairDouble;
+
 import java.util.Arrays;
 
 public enum NeighbourOrientation {
@@ -33,5 +35,9 @@ public enum NeighbourOrientation {
 
     public boolean isDiagonal() {
         return (Math.abs(x)+Math.abs(y)) == 2;
+    }
+
+    public PairDouble getPair() {
+        return new PairDouble(x,y);
     }
 }

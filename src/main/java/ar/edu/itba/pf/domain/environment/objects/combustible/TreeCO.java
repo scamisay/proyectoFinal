@@ -10,6 +10,6 @@ public class TreeCO extends CombustibleObject{
 
     @Override
     public String getCharacterRepresentarion() {
-        return "t";
+        return super.getCharacterRepresentarion()+"t";
     }
 }

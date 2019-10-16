@@ -12,8 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import static java.lang.Math.atan;
-import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -88,7 +86,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
                  */
                 if(windStrategy != null){
                     double windX = windStrategy.getX(x,y,t);
-                    double windY = windStrategy.getX(x,y,t);
+                    double windY = windStrategy.getY(x,y,t);
                     cell.updateWind(windX, windY);
                 }
 
@@ -96,6 +94,17 @@ public class CellularAutomatonImpl implements CellularAutomaton {
                  * evoluciono el estado de la celula
                  */
                 cell.evolve();
+            }
+        }
+
+        for(int x = 0; x < width; x++){
+            for (int y = 0; y < height; y++){
+                Cell cell = cells[x][y];
+
+                /**
+                 * evoluciono el estado de la celula
+                 */
+                cell.writeStructuresForNextTurn();
             }
         }
     }
