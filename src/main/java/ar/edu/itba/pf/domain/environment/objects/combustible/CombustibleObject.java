@@ -5,7 +5,7 @@ import ar.edu.itba.pf.domain.environment.exceptions.ConsumedByFireException;
 import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
 
-import static ar.edu.itba.pf.domain.environment.impl.Cell.COMBUSTIBLE_CONSUMED_BY_TIME;
+import static ar.edu.itba.pf.domain.environment.impl.Cell.TEMPERATURE_FOR_A_METER_BY_TIME;
 import static ar.edu.itba.pf.domain.environment.impl.Cell.MAX_WIND_SPEED_TOLERANCE_FOR_BURNING;
 
 public abstract class CombustibleObject implements EnvironmentObject {
@@ -14,12 +14,14 @@ public abstract class CombustibleObject implements EnvironmentObject {
     private double mass;
     private double combustionPerTime;
     private boolean onFire;
+    private double height;
     private Cell cell;
 
-    public CombustibleObject(double z, double mass, double combustionPerTime) {
+    public CombustibleObject(double z, double mass, double combustionByMeterPerTime, double height) {
         this.z = z;
         this.mass = mass;
-        this.combustionPerTime = combustionPerTime;
+        this.height = height;
+        this.combustionPerTime = combustionByMeterPerTime * height;
     }
 
     @Override
@@ -68,7 +70,7 @@ public abstract class CombustibleObject implements EnvironmentObject {
      * LABEL: HEAT PROPAGATION
      */
     private double generateHeat() {
-        return COMBUSTIBLE_CONSUMED_BY_TIME;
+        return TEMPERATURE_FOR_A_METER_BY_TIME * height;
     }
 
     @Override

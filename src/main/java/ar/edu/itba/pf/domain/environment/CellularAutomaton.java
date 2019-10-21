@@ -2,6 +2,7 @@ package ar.edu.itba.pf.domain.environment;
 
 import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
+import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
 import java.util.List;
@@ -34,5 +35,7 @@ public interface CellularAutomaton {
 
     String printWind();
 
-    List<EnvironmentObject> getCombustionableObjects();
+    List<CombustibleObject> getCombustionableObjects();
+
+    boolean isOnFire();
 }

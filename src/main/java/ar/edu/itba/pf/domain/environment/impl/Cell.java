@@ -45,9 +45,9 @@ public class Cell {
     /**
      * constants
      */
-    public static final double LOOSE_RADIATION_PER_CELL = 10;
+    public static final double RADIATION_PROPOTION_PROPAGATION_PER_CELL = .5;
     public static final double NORMAL_TEMERATURE = 0;
-    public static final double COMBUSTIBLE_CONSUMED_BY_TIME = 50;
+    public static final double TEMPERATURE_FOR_A_METER_BY_TIME = 50;
     public static final double MAX_WIND_SPEED_TOLERANCE_FOR_BURNING = 200;
     public static final double MAX_WIND_SPEED_TOLERANCE_FOR_HEATING = 100;
 
@@ -172,7 +172,7 @@ public class Cell {
     public void spreadHeat(double irradiatedTemperature){
         temperature += irradiatedTemperature;
         double irradiatedTemperatureToNeighbour = irradiatedTemperature;
-        if(irradiatedTemperatureToNeighbour <= LOOSE_RADIATION_PER_CELL){
+        if(irradiatedTemperatureToNeighbour <= 0){
             return;
         }
 
@@ -206,8 +206,7 @@ public class Cell {
     private void transferHeatToNeighbourCell(NeighbourOrientation neighbourOrientation, double heat){
         try{
             Cell neighbour = getCellFromOrientation(neighbourOrientation);
-            //int turn = (neighbour.getX() > x || (neighbour.getX()==x && neighbour.getY()>y)) ? getCurrentTurn() + 1: getCurrentTurn() + 1;
-            neighbour.updateNeighbourTemperature(heat - LOOSE_RADIATION_PER_CELL, neighbourOrientation);
+            neighbour.updateNeighbourTemperature(heat * RADIATION_PROPOTION_PROPAGATION_PER_CELL, neighbourOrientation);
         }catch (Exception e){
             /**
              * no hay hacia donde transferir
@@ -220,15 +219,10 @@ public class Cell {
             /**
              * busco la temperatura que me fue irradiada en esta direccion. Si supera el umbral la transmito
              */
-            //double irradiatedTemperatureToNeighbour = temperatures.get(orientation) - LOOSE_RADIATION_PER_CELL;
             double irradiatedTemperatureToNeighbour = temperatures.get(orientation);
-            //ActionByTurn temperatureByTurn = temperatures.get(orientation);
-            //int differenceBetweenTurns = abs(temperatureByTurn.getTurn() - getCurrentTurn());
-            if(irradiatedTemperatureToNeighbour <= LOOSE_RADIATION_PER_CELL){
+            if(irradiatedTemperatureToNeighbour <= 0){
                 return;
             }
-
-            //double irradiatedTemperatureToNeighbour = temperatureByTurn.getValue() - LOOSE_RADIATION_PER_CELL;
 
             NeighbourOrientation mainTargetOrientation = orientation.invert();
             List<NeighbourOrientation> targetOrientations = new ArrayList<>();
@@ -238,7 +232,6 @@ public class Cell {
                 targetOrientations.add(NeighbourOrientation.findByPosition( mainTargetOrientation.x,0));
             }
 
-            //int nextTurn = temperatureByTurn.getTurn() + 1;
             targetOrientations.forEach(targetOrientation -> transferHeatToNeighbourCell(targetOrientation, irradiatedTemperatureToNeighbour));
         });
     }
@@ -261,7 +254,7 @@ public class Cell {
     }
 
     private double calculateTemperatureDistributedByWind(PairDouble radiation, PairDouble wind){
-        return LOOSE_RADIATION_PER_CELL * cos(angleBetweenVectors(radiation, wind)) * influenceOfWind(wind.getModule());
+        return RADIATION_PROPOTION_PROPAGATION_PER_CELL * cos(angleBetweenVectors(radiation, wind)) * influenceOfWind(wind.getModule());
     }
 
     private double influenceOfWind(double x) {
@@ -332,6 +325,7 @@ public class Cell {
     public void writeStructuresForNextTurn() {
         for(NeighbourOrientation neighbourOrientation : nextTurntemperatures.keySet()){
             temperatures.put(neighbourOrientation, nextTurntemperatures.get(neighbourOrientation));
+            nextTurntemperatures.put(neighbourOrientation, 0.);
         }
     }
 }

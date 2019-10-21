@@ -5,6 +5,7 @@ import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.Pair;
 import ar.edu.itba.pf.domain.environment.exceptions.BoundaryException;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
+import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
 import java.util.ArrayList;
@@ -174,12 +175,19 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     }
 
     @Override
-    public List<EnvironmentObject> getCombustionableObjects() {
+    public List<CombustibleObject> getCombustionableObjects() {
         return iterate().stream()
                 .map(pair -> getCell(pair))
                 .map(cell -> cell.getCombustibleObjects())
                 .flatMap(Collection::stream)
                 .collect(toList());
+    }
+
+    @Override
+    public boolean isOnFire() {
+        return getCombustionableObjects().stream()
+                .filter(CombustibleObject::isOnFire)
+                .findFirst().isPresent();
     }
 
     private Cell getCell(Pair pair) {

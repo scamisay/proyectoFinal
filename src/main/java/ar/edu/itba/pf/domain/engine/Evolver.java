@@ -6,4 +6,5 @@ public interface Evolver {
 
     void start();
 
+    void continueEvolving(int times);
 }

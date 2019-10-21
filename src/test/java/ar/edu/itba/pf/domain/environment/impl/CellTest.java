@@ -19,10 +19,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static ar.edu.itba.pf.domain.environment.impl.Cell.NORMAL_TEMERATURE;
 import static ar.edu.itba.pf.domain.environment.impl.NeighbourOrientation.*;
 import static java.lang.Math.PI;
 
 public class CellTest {
+
+    static final int TREE_HEIGHT = 5;
 
     CellularAutomaton createCellularAutomaton(int width, int height){
         return new CellularAutomatonImpl(width,height);
@@ -61,7 +64,7 @@ public class CellTest {
 
     @Test
     public void testRadiationHorizontal(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(7, 1, 0,0);
+        CellularAutomaton a = createOneTreeOnFireAndGrass(7, 1, 0,0, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 20);
         e.start();
         a.printTemperatures();
@@ -70,7 +73,7 @@ public class CellTest {
 
     @Test
     public void testRadiationVertical(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(1, 7, 0,0);
+        CellularAutomaton a = createOneTreeOnFireAndGrass(1, 7, 0,0, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 20);
         e.start();
         a.printTemperatures();
@@ -79,18 +82,22 @@ public class CellTest {
 
     @Test
     public void testRadiationCircularATreeInAGrassField(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5);
-        Evolver e = new EvolverImpl(a, c -> c.getTime() > 3);
+        int x=5;
+        int y=x;
+        int size = x*2+1;
+        CellularAutomaton a = createManyTreesOnFireAndGrass(size, size, Arrays.asList(new Pair(x,y)), TREE_HEIGHT);
+        Evolver e = new EvolverImpl(a, c -> !c.isOnFire());
         e.start();
-        a.printTemperatures();
-        Assert.assertTrue(a!=null);
+        e.continueEvolving(x);
+        Assert.assertTrue(a.getCell(1,1).getTemperature() == NORMAL_TEMERATURE);
     }
 
     @Test
     public void testRadiationCircularATreeInADeadField(){
-        int x=5;
-        int y=5;
-        CellularAutomaton a = createOneTree(11, 11, x,y);
+        int x=6;
+        int y=x;
+        int size = x*2+1;
+        CellularAutomaton a = createOneTree(size, size, x, y, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
         e.start();
 
@@ -109,8 +116,9 @@ public class CellTest {
     @Test
     public void testRadiationCircularATreeInADeadFieldWithWind(){
         int x=5;
-        int y=5;
-        CellularAutomaton a = createOneTree(11, 11, x,y);
+        int y=x;
+        int size = x*2+1;
+        CellularAutomaton a = createOneTree(size, size, x,y, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
 
         //viento hacia el norte
@@ -132,7 +140,7 @@ public class CellTest {
 
     @Test
     public void testRadiationCircularWithWind(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5);
+        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         double angle = (1./2)*PI;
         a.addWindStrategy(new PolarWind(100, angle));
@@ -145,7 +153,7 @@ public class CellTest {
     public void testWindOrientationByAngle(){
         CellularAutomaton a = null;
         for(int i =0; i<8; i++){
-            a = createOneTreeOnFireAndGrass(11, 11, 5,5);
+            a = createOneTreeOnFireAndGrass(11, 11, 5,5, TREE_HEIGHT);
             Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
             double angle = (1./4)*PI*i;
             a.addWindStrategy(new PolarWind(100, angle));
@@ -159,7 +167,7 @@ public class CellTest {
 
     @Test
     public void testRadiationCircularTwoFires(){
-        CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList(new Pair(0,0), new Pair(7,7)));
+        CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList(new Pair(0,0), new Pair(7,7)), TREE_HEIGHT);
         //a.addWindStrategy(new PolarWind(2,PI/4));
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         e.start();
@@ -201,14 +209,14 @@ public class CellTest {
     public void consumingATree(){
         int width = 1;
         int height = 1;
-        CellularAutomaton cellularAutomaton = createOneTreeOnFireAndGrass(width, height, 0,0);
+        CellularAutomaton cellularAutomaton = createOneTreeOnFireAndGrass(width, height, 0,0, TREE_HEIGHT);
         Evolver evolver = new EvolverImpl(cellularAutomaton, c -> c.getCombustionableObjects().isEmpty());
         evolver.start();
         Assert.assertTrue(cellularAutomaton.getCombustionableObjects().isEmpty());
     }
 
     public void consumeTree(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(3, 3, 1,1);
+        CellularAutomaton a = createOneTreeOnFireAndGrass(3, 3, 1,1, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 3000);
         e.start();
     }
@@ -223,11 +231,11 @@ public class CellTest {
         return cellularAutomaton;
     }
 
-    private CellularAutomaton createOneTreeOnFireAndGrass(int width, int height, int treeX, int treeY){
+    private CellularAutomaton createOneTreeOnFireAndGrass(int width, int height, int treeX, int treeY, int treeHeight){
         CellularAutomaton cellularAutomaton = createScenario(width, height);
         cellularAutomaton.iterate().forEach( pair -> {
             if(pair.x == treeX && pair.y==treeY){
-                CombustibleObject combustibleObject = new TreeCO(10,100);
+                CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
                 combustibleObject.setOnFire();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {
@@ -237,11 +245,11 @@ public class CellTest {
         return cellularAutomaton;
     }
 
-    private CellularAutomaton createOneTree(int width, int height, int treeX, int treeY){
+    private CellularAutomaton createOneTree(int width, int height, int treeX, int treeY, int treeHeight){
         CellularAutomaton cellularAutomaton = createScenario(width, height);
         cellularAutomaton.iterate().forEach( pair -> {
             if(pair.x == treeX && pair.y==treeY){
-                CombustibleObject combustibleObject = new TreeCO(10,100);
+                CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
                 combustibleObject.setOnFire();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }
@@ -249,11 +257,11 @@ public class CellTest {
         return cellularAutomaton;
     }
 
-    private CellularAutomaton createManyTreesOnFireAndGrass(int width, int height, List<Pair> treesPositions){
+    private CellularAutomaton createManyTreesOnFireAndGrass(int width, int height, List<Pair> treesPositions, int treeHeight){
         CellularAutomaton cellularAutomaton = createScenario(width, height);
         cellularAutomaton.iterate().forEach( pair -> {
             if(treesPositions.contains(pair)){
-                CombustibleObject combustibleObject = new TreeCO(10,100);
+                CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
                 combustibleObject.setOnFire();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {

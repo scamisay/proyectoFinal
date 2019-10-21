@@ -26,4 +26,11 @@ public class EvolverImpl implements Evolver {
             cellularAutomaton.evolve();
         }
     }
+
+    @Override
+    public void continueEvolving(int times) {
+        for(int i = 1 ; i <= times; i++){
+            cellularAutomaton.evolve();
+        }
+    }
 }
