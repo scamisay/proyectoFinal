@@ -18,10 +18,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static ar.edu.itba.pf.domain.environment.impl.Cell.NORMAL_TEMERATURE;
 import static ar.edu.itba.pf.domain.environment.impl.NeighbourOrientation.*;
 import static java.lang.Math.PI;
+import static java.util.stream.Collectors.toList;
 
 public class CellTest {
 
@@ -67,8 +69,12 @@ public class CellTest {
         CellularAutomaton a = createOneTreeOnFireAndGrass(7, 1, 0,0, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 20);
         e.start();
-        a.printTemperatures();
-        Assert.assertTrue(a!=null);
+
+        List<Double> temperatures = IntStream.range(0,a.getWidth()).boxed()
+                .map( i -> a.getCell(i,0).getTemperature())
+                .collect(toList());
+
+        Assert.assertTrue(isSortedDesc(temperatures));
     }
 
     @Test
@@ -76,8 +82,12 @@ public class CellTest {
         CellularAutomaton a = createOneTreeOnFireAndGrass(1, 7, 0,0, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 20);
         e.start();
-        a.printTemperatures();
-        Assert.assertTrue(a!=null);
+
+        List<Double> temperatures = IntStream.range(0,a.getHeight()).boxed()
+                .map( i -> a.getCell(0,i).getTemperature())
+                .collect(toList());
+
+        Assert.assertTrue(isSortedDesc(temperatures));
     }
 
     @Test
@@ -123,7 +133,7 @@ public class CellTest {
 
         //viento hacia el norte
         double angle = (1./2)*PI;
-        a.addWindStrategy(new PolarWind(200, angle));
+        a.addWindStrategy(new PolarWind(50, angle));
         e.start();
 
         Cell north = a.getCell(x,y-1);
@@ -198,6 +208,20 @@ public class CellTest {
         PairDouble v2 = new PairDouble(0,1);
         double angle = VectorHelper.angleBetweenVectors(v1,v2);
         Assert.assertTrue(areEqualDouble(angle,PI/2));
+    }
+
+    public static boolean isSortedDesc(List<Double> list) {
+        return isSortedDesc(list, list.size());
+    }
+
+    public static boolean isSortedDesc(List<Double> listOfStrings, int index) {
+        if (index < 2) {
+            return true;
+        } else if (listOfStrings.get(index - 1).compareTo(listOfStrings.get(index - 2)) > 0) {
+            return false;
+        } else {
+            return isSortedDesc(listOfStrings, index - 1);
+        }
     }
 
     public static boolean areEqualDouble(double a, double b) {

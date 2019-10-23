@@ -249,12 +249,12 @@ public class Cell {
         return neighbourOrientations.stream()
                 .filter(neighbourRadiation -> temperatures.get(neighbourRadiation) > 0)
                 .mapToDouble(neighbourRadiation ->
-                        calculateTemperatureDistributedByWind(neighbourRadiation.getPair(), getWind()))
+                        calculateTemperatureDistributedByWind(temperatures.get(neighbourRadiation),neighbourRadiation.getPair(), getWind()))
                 .sum();
     }
 
-    private double calculateTemperatureDistributedByWind(PairDouble radiation, PairDouble wind){
-        return RADIATION_PROPOTION_PROPAGATION_PER_CELL * cos(angleBetweenVectors(radiation, wind)) * influenceOfWind(wind.getModule());
+    private double calculateTemperatureDistributedByWind(double radiatedTemperature, PairDouble radiation, PairDouble wind){
+        return radiatedTemperature * cos(angleBetweenVectors(radiation, wind)) * influenceOfWind(wind.getModule());
     }
 
     private double influenceOfWind(double x) {
