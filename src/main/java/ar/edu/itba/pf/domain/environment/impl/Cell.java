@@ -12,6 +12,7 @@ import ar.edu.itba.pf.domain.helper.ValidatorHelper;
 
 import java.util.*;
 
+import static ar.edu.itba.pf.domain.environment.AshesDistributor.calculateDistribution;
 import static ar.edu.itba.pf.domain.helper.VectorHelper.angleBetweenVectors;
 import static java.lang.StrictMath.cos;
 import static java.util.stream.Collectors.toList;
@@ -22,7 +23,8 @@ public class Cell {
     private int x;
     private int y;
     private CellularAutomaton cellularAutomaton;
-    private double temperature = NORMAL_TEMERATURE;
+    private double temperature = NORMAL_TEMPERATURE;
+    private double ashes = 0;
     private PairDouble wind;
     private List<ActionByTurn> actionsByTurn = new ArrayList<>();
 
@@ -41,32 +43,42 @@ public class Cell {
 
     private List<EnvironmentObject> objects = new LinkedList<>();
 
+    private Map<NeighbourOrientation, Double> ashesSpread = new HashMap<>();
+
+    private Map<NeighbourOrientation, Double> nextTurnAshesSpread = new HashMap<>();
 
     /**
      * constants
      */
     public static final double RADIATION_PROPOTION_PROPAGATION_PER_CELL = .5;
-    public static final double NORMAL_TEMERATURE = 0;
+    public static final double NORMAL_TEMPERATURE = 0;
     public static final double TEMPERATURE_FOR_A_METER_BY_TIME = 50;
     public static final double MAX_WIND_SPEED_TOLERANCE_FOR_BURNING = 200;
     public static final double MAX_WIND_SPEED_TOLERANCE_FOR_HEATING = 100;
 
     public Cell(int x, int y, CellularAutomaton cellularAutomaton) {
-        ValidatorHelper.checkPositive(x,y);
+        ValidatorHelper.checkPositive(x, y);
         ValidatorHelper.checkNotNull(cellularAutomaton);
         this.x = x;
         this.y = y;
         this.cellularAutomaton = cellularAutomaton;
         initializeNeighbours();
         initializeTemperatures();
+        initializeAshes();
         wind = PairDouble.ZERO;
     }
 
     public void initializeTemperatures() {
-        //temperatures = new HashMap<>();
+        for (NeighbourOrientation neighbourOrientation : neighbourOrientations) {
+            temperatures.put(neighbourOrientation, 0.);
+            nextTurntemperatures.put(neighbourOrientation, 0.);
+        }
+    }
+
+    public void initializeAshes() {
         for(NeighbourOrientation neighbourOrientation : neighbourOrientations){
-                temperatures.put(neighbourOrientation, 0.);
-                nextTurntemperatures.put(neighbourOrientation, 0.);
+            ashesSpread.put(neighbourOrientation, 0.);
+            nextTurnAshesSpread.put(neighbourOrientation, 0.);
         }
     }
 
@@ -108,22 +120,28 @@ public class Cell {
     }
 
     public void evolve() {
-        //System.out.println(String.format("(%d,%d)",x,y));
         List<ActionType> actions = getActionsForThisTurn();
 
         temperature = updateTemperatureByRadiation() + updateTemperatureByWind();
+
+        ashes = updateAshes();
 
         /**
          * evoluciono los no combustibles
          */
         getObjects().stream()
                 .filter(o -> !(o instanceof CombustibleObject))
-                .forEach( object -> object.evolve());
+                .forEach(object -> object.evolve());
 
         /**
          * transmito el calor que ha llegado de celulas vecinas
          */
         transmitHeatReceived();
+
+        /**
+         * transmito las cenizas que ha llegado de celulas vecinas
+         */
+        spreadAshesReceived();
 
         /**
          * evoluciono el elemento que genera calor
@@ -139,13 +157,24 @@ public class Cell {
             CombustibleObject combustibleObject = getCombustibleObjects().get(0);
             if(combustibleObject.isOnFire()){
                 spreadFire();
+                double ashesGenerated = 5.;
+                spreadAshes(ashesGenerated);
             }
 
             double temperatureGenerated = combustibleObject.evolve();
             spreadHeat(temperatureGenerated);
         }
 
-        //initializeTemperatures();
+    }
+
+    private double updateAshes() {
+        return neighbourOrientations.stream()
+                .mapToDouble(n -> ashesSpread.get(n))
+                .sum();
+    }
+
+    private void spreadAshesReceived() {
+        spreadAshes(ashes);
     }
 
     private int getCurrentTurn(){
@@ -176,8 +205,24 @@ public class Cell {
             return;
         }
 
-        neighbourOrientations.forEach( orientation -> transferHeatToNeighbourCell(orientation, irradiatedTemperatureToNeighbour ) );
+        neighbourOrientations.forEach(
+                orientation -> transferHeatToNeighbourCell(orientation, irradiatedTemperatureToNeighbour ) );
+    }
 
+    public void spreadAshes(double ashesToDistribute){
+        for(NeighbourOrientation orientation : neighbourOrientations){
+            double angle = angleBetweenVectors(orientation.getPair(), getWind());
+            double distributionForNeighbour = calculateDistribution(angle)*ashesToDistribute;
+            if(distributionForNeighbour >= 1e-5){
+                Cell neighbour = getCellFromOrientation(orientation);
+                neighbour.updateNeighbourAshes(distributionForNeighbour, orientation);
+            }
+        }
+    }
+
+    public void updateNeighbourAshes(double ashes, NeighbourOrientation myOrientation){
+        NeighbourOrientation neighbourOrientation = myOrientation.invert();
+        nextTurnAshesSpread.put(neighbourOrientation, ashes);
     }
 
     public void spreadFire(){
@@ -249,7 +294,7 @@ public class Cell {
         return neighbourOrientations.stream()
                 .filter(neighbourRadiation -> temperatures.get(neighbourRadiation) > 0)
                 .mapToDouble(neighbourRadiation ->
-                        calculateTemperatureDistributedByWind(temperatures.get(neighbourRadiation),neighbourRadiation.getPair(), getWind()))
+                        calculateTemperatureDistributedByWind(temperatures.get(neighbourRadiation),neighbourRadiation.invert().getPair(), getWind()))
                 .sum();
     }
 
@@ -267,14 +312,7 @@ public class Cell {
 
     public void updateNeighbourTemperature(double temperature, NeighbourOrientation myOrientation){
         NeighbourOrientation neighbourOrientation = myOrientation.invert();
-        //double oldTemperature = temperatures.get(neighbourOrientation);
-        //temperatures.put(neighbourOrientation, oldTemperature + temperature);
-
-        //int turn = getCurrentTurn()+1;
-        //ActionByTurn actionByTurn = new ActionByTurn(turn, ActionType.SPREAD_HEAT, temperature);
-        //if(temperatures.get(neighbourOrientation) == null){
-            nextTurntemperatures.put(neighbourOrientation, temperature);
-        //}
+        nextTurntemperatures.put(neighbourOrientation, temperature);
     }
 
     public void updateWind(double windX, double windY){
@@ -295,6 +333,10 @@ public class Cell {
 
     public double getTemperature() {
         return temperature;
+    }
+
+    public double getAshes() {
+        return ashes;
     }
 
     public List<EnvironmentObject> getObjects() {
@@ -324,8 +366,13 @@ public class Cell {
 
     public void writeStructuresForNextTurn() {
         for(NeighbourOrientation neighbourOrientation : nextTurntemperatures.keySet()){
+            //actualizar temperaturas
             temperatures.put(neighbourOrientation, nextTurntemperatures.get(neighbourOrientation));
             nextTurntemperatures.put(neighbourOrientation, 0.);
+
+            //actualizar cenizas
+            ashesSpread.put(neighbourOrientation, nextTurnAshesSpread.get(neighbourOrientation));
+            nextTurnAshesSpread.put(neighbourOrientation, 0.);
         }
     }
 }

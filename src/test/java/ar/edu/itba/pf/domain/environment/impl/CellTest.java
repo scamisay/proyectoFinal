@@ -11,17 +11,17 @@ import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
 import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
 import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
 import ar.edu.itba.pf.domain.helper.VectorHelper;
+import org.assertj.core.util.Streams;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.IntStream;
 
-import static ar.edu.itba.pf.domain.environment.impl.Cell.NORMAL_TEMERATURE;
+import static ar.edu.itba.pf.domain.environment.AshesDistributor.calculateDistribution;
+import static ar.edu.itba.pf.domain.environment.impl.Cell.NORMAL_TEMPERATURE;
 import static ar.edu.itba.pf.domain.environment.impl.NeighbourOrientation.*;
+import static ar.edu.itba.pf.domain.helper.VectorHelper.angleBetweenVectors;
 import static java.lang.Math.PI;
 import static java.util.stream.Collectors.toList;
 
@@ -99,7 +99,7 @@ public class CellTest {
         Evolver e = new EvolverImpl(a, c -> !c.isOnFire());
         e.start();
         e.continueEvolving(x);
-        Assert.assertTrue(a.getCell(1,1).getTemperature() == NORMAL_TEMERATURE);
+        Assert.assertTrue(a.getCell(1,1).getTemperature() == NORMAL_TEMPERATURE);
     }
 
     @Test
@@ -124,6 +124,19 @@ public class CellTest {
     }
 
     @Test
+    public void testAshesAngle(){
+        Map<NeighbourOrientation, Double> proportions = new HashMap<>();
+        PairDouble wind = NORTH.getPair();
+        for(NeighbourOrientation orientation : NeighbourOrientation.values()){
+            double angle = angleBetweenVectors(orientation.getPair(), wind);
+            double proportionDistributionForNeighbour = calculateDistribution(angle);
+            proportions.put(orientation, proportionDistributionForNeighbour);
+        }
+        double epsilon = 1e-5;
+        Assert.assertTrue(proportions.entrySet().stream().filter(e->e.getValue() >= epsilon).count() == 3);
+    }
+
+    @Test
     public void testRadiationCircularATreeInADeadFieldWithWind(){
         int x=5;
         int y=x;
@@ -136,10 +149,10 @@ public class CellTest {
         a.addWindStrategy(new PolarWind(50, angle));
         e.start();
 
-        Cell north = a.getCell(x,y-1);
-        Cell south = a.getCell( x, y+1);
+        Cell north = a.getCell(x,y+1);
+        Cell south = a.getCell( x, y-1);
         Cell west = a.getCell(x-1,y);
-        Cell east = a.getCell(x-1,y);
+        Cell east = a.getCell(x+1,y);
 
         Assert.assertTrue(
                 (north.getTemperature() > south.getTemperature())
@@ -149,7 +162,7 @@ public class CellTest {
     }
 
     @Test
-    public void testRadiationCircularWithWind(){
+    public void testCircularRadiationWithWind(){
         CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         double angle = (1./2)*PI;
@@ -184,15 +197,6 @@ public class CellTest {
         a.printTemperatures();
         Assert.assertTrue(a!=null);
     }
-
-   /* @Test
-    public void testRadiationCircularTwoFires(){
-        CellularAutomaton a = createManyTreesOnFireAndGrass(10, 10, Arrays.asList( new Pair(5,5)));
-        Evolver e = new EvolverImpl(a, c -> c.getTime() > 7);
-        e.start();
-        a.printTemperatures();
-        Assert.assertTrue(a!=null);
-    }*/
 
    @Test
    public void testParallelVectors(){

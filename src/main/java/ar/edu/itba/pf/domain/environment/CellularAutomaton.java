@@ -33,6 +33,10 @@ public interface CellularAutomaton {
 
     String printTemperatures();
 
+    String printCardinals();
+
+    String printAshes();
+
     String printWind();
 
     List<CombustibleObject> getCombustionableObjects();

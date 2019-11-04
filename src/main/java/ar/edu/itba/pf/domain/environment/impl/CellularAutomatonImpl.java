@@ -138,7 +138,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
 
     private String printer(Function<Cell, String> printInCell){
         StringBuffer sb = new StringBuffer();
-        for(int y = 0; y < height; y++){
+        for(int y = height-1; y >= 0; y--){
             for(int x = 0; x<width; x++){
                 sb.append(String.format("[ %s ] ",printInCell.apply(cells[x][y])));
             }
@@ -162,6 +162,17 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     public String printTemperatures() {
         return printer(cell -> String.format("%7.2f",cell.getTemperature()));
     }
+
+    @Override
+    public String printCardinals() {
+        return printer(cell -> String.format("%d,%d",cell.getX(), cell.getY()));
+    }
+
+    @Override
+    public String printAshes() {
+        return printer(cell -> String.format("%7.2f",cell.getAshes()));
+    }
+
 
     @Override
     public String printWind() {
