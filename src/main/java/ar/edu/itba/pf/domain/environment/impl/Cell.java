@@ -150,14 +150,15 @@ public class Cell {
             /**
              * Si aun no hay fuego lo enciendo
              */
-            if(actions.contains(ActionType.START_A_FIRE)){
+            boolean startFireForAshes = evalProbabilityToFireForAshes();
+            if(actions.contains(ActionType.START_A_FIRE) || startFireForAshes){
                 startFire();
             }
 
             CombustibleObject combustibleObject = getCombustibleObjects().get(0);
             if(combustibleObject.isOnFire()){
                 spreadFire();
-                double ashesGenerated = 5.;
+                double ashesGenerated = 1.;
                 spreadAshes(ashesGenerated);
             }
 
@@ -165,6 +166,10 @@ public class Cell {
             spreadHeat(temperatureGenerated);
         }
 
+    }
+
+    private boolean evalProbabilityToFireForAshes() {
+        return cellularAutomaton.generateRandomDouble() < ashes;
     }
 
     private double updateAshes() {
@@ -209,11 +214,13 @@ public class Cell {
                 orientation -> transferHeatToNeighbourCell(orientation, irradiatedTemperatureToNeighbour ) );
     }
 
+    private static double ASHES_EPSILON = 1e-5;
+
     public void spreadAshes(double ashesToDistribute){
         for(NeighbourOrientation orientation : neighbourOrientations){
             double angle = angleBetweenVectors(orientation.getPair(), getWind());
             double distributionForNeighbour = calculateDistribution(angle)*ashesToDistribute;
-            if(distributionForNeighbour >= 1e-5){
+            if(distributionForNeighbour >= ASHES_EPSILON){
                 Cell neighbour = getCellFromOrientation(orientation);
                 neighbour.updateNeighbourAshes(distributionForNeighbour, orientation);
             }

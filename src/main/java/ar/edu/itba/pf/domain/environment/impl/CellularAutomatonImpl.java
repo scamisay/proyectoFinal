@@ -11,6 +11,7 @@ import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
 
 import static java.lang.Math.sqrt;
@@ -25,9 +26,15 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     private Cell[][] cells;
     private List<Drone> drones = new ArrayList<>();
     private WindStrategy windStrategy;
+    private Random randomGenerator = new Random();
 
     public CellularAutomatonImpl(int width, int height) {
         init(width, height);
+    }
+
+    @Override
+    public void setSeed(long seed) {
+        randomGenerator = new Random(seed);
     }
 
     @Override
@@ -199,6 +206,11 @@ public class CellularAutomatonImpl implements CellularAutomaton {
         return getCombustionableObjects().stream()
                 .filter(CombustibleObject::isOnFire)
                 .findFirst().isPresent();
+    }
+
+    @Override
+    public double generateRandomDouble() {
+        return randomGenerator.nextDouble();
     }
 
     private Cell getCell(Pair pair) {

@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface CellularAutomaton {
 
+    void setSeed(long seed);
+
     void init(int width, int height);
 
     Cell getCell(int x, int y);
@@ -42,4 +44,6 @@ public interface CellularAutomaton {
     List<CombustibleObject> getCombustionableObjects();
 
     boolean isOnFire();
+
+    double generateRandomDouble();
 }

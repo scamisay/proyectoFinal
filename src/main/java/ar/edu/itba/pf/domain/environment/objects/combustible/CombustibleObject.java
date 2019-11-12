@@ -17,11 +17,11 @@ public abstract class CombustibleObject implements EnvironmentObject {
     private double height;
     private Cell cell;
 
-    public CombustibleObject(double z, double mass, double combustionByMeterPerTime, double height) {
+    public CombustibleObject(double z, double mass, double combustionByAreaPerTime, double height) {
         this.z = z;
         this.mass = mass;
         this.height = height;
-        this.combustionPerTime = combustionByMeterPerTime * height;
+        this.combustionPerTime = combustionByAreaPerTime * height;
     }
 
     @Override

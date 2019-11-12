@@ -11,7 +11,7 @@ import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
 import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
 import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
 import ar.edu.itba.pf.domain.helper.VectorHelper;
-import org.assertj.core.util.Streams;
+import ar.edu.itba.pf.domain.helper.worldcreator.WorldPart;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class CellTest {
 
     @Test
     public void createTopLeftCell(){
-        Cell cell = new Cell(0,0, createCellularAutomaton(4,4));
+        Cell cell = new Cell(0,3, createCellularAutomaton(4,4));
         Set<NeighbourOrientation> orientationsCalculated = cell.getNeighbourOrientations();
         Set<NeighbourOrientation> expected = new HashSet<>(Arrays.asList(EAST, SE, SOUTH));
         Assert.assertTrue(expected.equals(orientationsCalculated));
@@ -50,7 +50,7 @@ public class CellTest {
 
     @Test
     public void createBottomRightCell(){
-        Cell cell = new Cell(3,3, createCellularAutomaton(4,4));
+        Cell cell = new Cell(3,0, createCellularAutomaton(4,4));
         Set<NeighbourOrientation> orientationsCalculated = cell.getNeighbourOrientations();
         Set<NeighbourOrientation> expected = new HashSet<>(Arrays.asList(WEST, NW, NORTH));
         Assert.assertTrue(expected.equals(orientationsCalculated));
@@ -96,7 +96,8 @@ public class CellTest {
         int y=x;
         int size = x*2+1;
         CellularAutomaton a = createManyTreesOnFireAndGrass(size, size, Arrays.asList(new Pair(x,y)), TREE_HEIGHT);
-        Evolver e = new EvolverImpl(a, c -> !c.isOnFire());
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
+        //Evolver e = new EvolverImpl(a, c -> !c.isOnFire());
         e.start();
         e.continueEvolving(x);
         Assert.assertTrue(a.getCell(1,1).getTemperature() == NORMAL_TEMPERATURE);
@@ -163,13 +164,45 @@ public class CellTest {
 
     @Test
     public void testCircularRadiationWithWind(){
-        CellularAutomaton a = createOneTreeOnFireAndGrass(11, 11, 5,5, TREE_HEIGHT);
+        int x=5;
+        int y=x;
+        int size = x*2+1;
+        CellularAutomaton a = createOneTreeOnFireAndGrass(size, size, x,y, TREE_HEIGHT);
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 6);
         double angle = (1./2)*PI;
         a.addWindStrategy(new PolarWind(100, angle));
         e.start();
-        a.printTemperatures();
-        Assert.assertTrue(a!=null);
+
+        Cell north = a.getCell(x,y+1);
+        Cell south = a.getCell( x, y-1);
+        Cell west = a.getCell(x-1,y);
+        Cell east = a.getCell(x+1,y);
+
+        Assert.assertTrue(
+                (north.getTemperature() > south.getTemperature())
+                        &&
+                        areEqualDouble(west.getTemperature(), east.getTemperature() )
+        );
+    }
+
+    @Test
+    public void testFireByAshes(){
+        int x=5;
+        int size = x*2+1;
+        CellularAutomaton a = createWorldFromParts(size, size,
+
+                new WorldPart(0, x, size, x, b -> new GrassCO(1,5)),
+                new WorldPart(x, 0, 1,1, b -> {
+                    CombustibleObject combustibleObject = new TreeCO(10,100, TREE_HEIGHT);
+                    combustibleObject.setOnFire();
+                    return combustibleObject;
+                }));
+        Evolver e = new EvolverImpl(a, c -> c.getTime() > 7);
+        double angle = (1./2)*PI;
+        a.addWindStrategy(new PolarWind(100, angle));
+        e.start();
+
+        Assert.assertTrue(a.getCombustionableObjects().size() > 1);
     }
 
     @Test
@@ -270,6 +303,14 @@ public class CellTest {
                 cellularAutomaton.addElement(pair, new GrassCO(1,5));
             }
         });
+        return cellularAutomaton;
+    }
+
+    private CellularAutomaton createWorldFromParts(int width, int height, WorldPart ... parts){
+        CellularAutomaton cellularAutomaton = createScenario(width, height);
+        for(WorldPart part : parts){
+            part.createPart(cellularAutomaton);
+        }
         return cellularAutomaton;
     }
 
