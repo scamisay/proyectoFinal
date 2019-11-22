@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+
+<body>
+
+<img style = "display:none;"
+     id = "grass_pic"
+     th:src ="@{/img/grass.svg}" />
+
+<img style = "display:none;"
+     id = "tree_pic"
+     th:src="@{/img/tree.svg}" />
+
+<img style = "display:none;"
+     id = "fire_pic"
+     th:src="@{/img/fire.svg}" />
+
+<canvas id="drawing" height="500" width="500">
+</canvas>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/animator.js}"></script>
+
+<script type="text/javascript">
+    function drawSimulation(simulationId){
+        var animator = new Animator({
+            simulationId: simulationId,
+            canvas: 'drawing',
+            simulationEndpoint: '/simulationApi/findSimulation',
+            instantEndpoint: '/simulationApi/findInstants'
+        });
+
+        return animator;
+    }
+
+    var a = drawSimulation(1);
+    a.start();
+
+</script>
+</body>
+
+</html>

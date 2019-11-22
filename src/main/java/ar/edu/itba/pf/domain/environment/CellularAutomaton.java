@@ -6,6 +6,8 @@ import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 public interface CellularAutomaton {
 
@@ -27,7 +29,7 @@ public interface CellularAutomaton {
 
     int getHeight();
 
-    int getTime();
+    long getTime();
 
     List<Pair> iterate();
 
@@ -46,4 +48,6 @@ public interface CellularAutomaton {
     boolean isOnFire();
 
     double generateRandomDouble();
+
+    <T> Map<Integer, Map<Integer, T>> buildMatrix(Function<Cell, T> transformation);
 }

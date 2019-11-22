@@ -89,8 +89,8 @@ public abstract class CombustibleObject implements EnvironmentObject {
         this.cell = cell;
     }
 
-    @Override
+    /*@Override
     public String getCharacterRepresentarion() {
         return isOnFire()?"F":"";
-    }
+    }*/
 }

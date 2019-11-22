@@ -6,7 +6,7 @@ public interface EnvironmentObject {
 
     double getZ();
 
-    String getCharacterRepresentarion();
+    String getStringRepresentarion();
 
     void setCell(Cell cell);
 

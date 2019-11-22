@@ -182,7 +182,7 @@ public class Cell {
         spreadAshes(ashes);
     }
 
-    private int getCurrentTurn(){
+    private long getCurrentTurn(){
         return cellularAutomaton.getTime();
     }
 
@@ -240,11 +240,11 @@ public class Cell {
     }
 
     public void startFireInNextTurn(){
-        int nextTurn = cellularAutomaton.getTime()+1;
+        long nextTurn = cellularAutomaton.getTime()+1;
         addActionByTurn(nextTurn, ActionType.START_A_FIRE);
     }
 
-    public void addActionByTurn(int turn, ActionType actionType){
+    public void addActionByTurn(long turn, ActionType actionType){
         actionsByTurn.add(new ActionByTurn(turn, actionType));
     }
 
@@ -381,5 +381,15 @@ public class Cell {
             ashesSpread.put(neighbourOrientation, nextTurnAshesSpread.get(neighbourOrientation));
             nextTurnAshesSpread.put(neighbourOrientation, 0.);
         }
+    }
+
+    public String getTopFieldObject() {
+        return getObjects().stream()
+                .map(o -> o.getStringRepresentarion())
+                .reduce((first, second) -> second).get();
+    }
+
+    public String getTopFireIfExists(){
+        return hasCombustibleObject() && getCombustibleObjects().get(0).isOnFire() ? "F" : null;
     }
 }

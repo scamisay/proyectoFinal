@@ -8,10 +8,7 @@ import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.windengine.WindStrategy;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.Math.sqrt;
@@ -22,7 +19,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
 
     private int width;
     private int height;
-    private int t;
+    private long t;
     private Cell[][] cells;
     private List<Drone> drones = new ArrayList<>();
     private WindStrategy windStrategy;
@@ -128,7 +125,7 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     }
 
     @Override
-    public int getTime() {
+    public long getTime() {
         return t;
     }
 
@@ -155,11 +152,28 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     }
 
     @Override
+    public <T> Map<Integer, Map<Integer, T>> buildMatrix(Function<Cell, T> transformation) {
+        Map<Integer, Map<Integer, T>> matrix = new HashMap<>();
+        for(int y = height-1; y >= 0; y--){
+            Map<Integer, T> subMatrix = new HashMap<>();
+            for(int x = 0; x<width; x++){
+                T element = transformation.apply(cells[x][y]);
+                if(element != null){
+                    subMatrix.put(x, element);
+                }
+            }
+            if(!subMatrix.isEmpty()){
+                matrix.put(y, subMatrix);
+            }
+        }
+        return matrix;
+    }
+    @Override
     public String printObjects() {
         return printer(cell ->
                 cell.getObjects()
                 .stream()
-                .map(EnvironmentObject::getCharacterRepresentarion)
+                .map(EnvironmentObject::getStringRepresentarion)
                 .filter(s -> !s.isEmpty())
                 .collect(joining(" "))
         );

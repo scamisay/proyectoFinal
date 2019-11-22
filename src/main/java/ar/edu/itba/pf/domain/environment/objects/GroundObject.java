@@ -16,8 +16,8 @@ public class GroundObject implements FieldObject {
     }
 
     @Override
-    public String getCharacterRepresentarion() {
-        return "_";
+    public String getStringRepresentarion() {
+        return "GROUND";
     }
 
     @Override

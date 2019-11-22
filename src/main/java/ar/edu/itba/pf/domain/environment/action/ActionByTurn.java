@@ -2,11 +2,11 @@ package ar.edu.itba.pf.domain.environment.action;
 
 public class ActionByTurn {
 
-    private int turn;
+    private long turn;
     private ActionType action;
     private Double value;//es opcional
 
-    public ActionByTurn(int turn, ActionType action) {
+    public ActionByTurn(long turn, ActionType action) {
         this.turn = turn;
         this.action = action;
     }
@@ -21,7 +21,7 @@ public class ActionByTurn {
         return aTurn == turn;
     }
 
-    public int getTurn() {
+    public long getTurn() {
         return turn;
     }
 

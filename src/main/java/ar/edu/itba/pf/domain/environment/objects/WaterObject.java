@@ -16,8 +16,8 @@ public class WaterObject implements FieldObject {
     }
 
     @Override
-    public String getCharacterRepresentarion() {
-        return "~";
+    public String getStringRepresentarion() {
+        return "WATER";
     }
 
     @Override

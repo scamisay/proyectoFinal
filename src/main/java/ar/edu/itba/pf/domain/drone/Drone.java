@@ -37,7 +37,7 @@ public class Drone implements DroneObject {
     }
 
     @Override
-    public String getCharacterRepresentarion() {
+    public String getStringRepresentarion() {
         return "D";
     }
 

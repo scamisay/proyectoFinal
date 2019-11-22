@@ -137,12 +137,15 @@ public class CellTest {
         Assert.assertTrue(proportions.entrySet().stream().filter(e->e.getValue() >= epsilon).count() == 3);
     }
 
+    //cambiado
     @Test
     public void testRadiationCircularATreeInADeadFieldWithWind(){
         int x=5;
         int y=x;
         int size = x*2+1;
-        CellularAutomaton a = createOneTree(size, size, x,y, TREE_HEIGHT);
+        //CellularAutomaton a = createOneTree(size, size, x,y, TREE_HEIGHT);
+        CellularAutomaton a = createManyTreesOnFireAndGrass(size, size, Arrays.asList(new Pair(x,y)), TREE_HEIGHT);
+
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 10);
 
         //viento hacia el norte
