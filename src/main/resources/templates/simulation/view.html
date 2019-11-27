@@ -4,9 +4,49 @@
 <head>
     <meta charset="utf-8">
     <title></title>
+
+    <style>
+        /* Style the header */
+        .header {
+            padding: 10px 16px;
+            background: #555;
+            color: #f1f1f1;
+        }
+
+        /* Page content */
+        .content {
+            padding: 16px;
+        }
+
+        /* The sticky class is added to the header with JS when it reaches its scroll position */
+        .sticky {
+            position: fixed;
+            top: 0;
+            width: 100%
+        }
+
+        /* Add some top padding to the page content to prevent sudden quick movement (as the header gets a new position at the top of the page (position:fixed and top:0) */
+        .sticky + .content {
+            padding-top: 102px;
+        }
+
+        #progressBar {
+            margin: 10px;
+            width: 60%;
+            height: 8px;
+            position: relative;
+        }
+
+    </style>
 </head>
 
 <body>
+
+<div class="header" id="myHeader">
+   <!-- <h2>My Header</h2>-->
+    <div id="progressBar"></div>
+</div>
+
 
 <img style = "display:none;"
      id = "grass_pic"
@@ -24,10 +64,17 @@
      id = "drone_pic"
      th:src="@{/img/drone.svg}" />
 
+<img style = "display:none;"
+     id = "ground_pic"
+     th:src="@{/img/ground.svg}" />
+
 <canvas id="drawing" height="500" width="500">
 </canvas>
 
+<input type="hidden" id="simulationId" th:value="${simulationId}"/>
+
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://rawgit.com/kimmobrunfeldt/progressbar.js/1.0.0/dist/progressbar.js"></script>
 <script th:src="@{/js/api.js}"></script>
 <script th:src="@{/js/animator.js}"></script>
 
@@ -43,8 +90,31 @@
         return animator;
     }
 
-    var a = drawSimulation(1);
+    var a = drawSimulation($("#simulationId").val());
     a.start();
+
+
+
+    function fixedHeader(){
+        // When the user scrolls the page, execute myFunction
+        window.onscroll = function() {myFunction()};
+
+// Get the header
+        var header = document.getElementById("myHeader");
+
+// Get the offset position of the navbar
+        var sticky = header.offsetTop;
+
+// Add the sticky class to the header when you reach its scroll position. Remove "sticky" when you leave the scroll position
+        function myFunction() {
+            if (window.pageYOffset > sticky) {
+                header.classList.add("sticky");
+            } else {
+                header.classList.remove("sticky");
+            }
+        }
+    }
+    fixedHeader();
 
 </script>
 </body>

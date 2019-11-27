@@ -15,6 +15,46 @@ class Animator{
         }
 
         this.loadResources();
+        this.t = 1;
+        this.bar = this.loadBar();
+    }
+
+    loadBar(){
+        var animator = this;
+        return new ProgressBar.Line(progressBar, {
+            strokeWidth: 4,
+            easing: 'easeInOut',
+            duration: 1400,
+            color: '#FFEA82',
+            trailColor: '#eee',
+            trailWidth: 1,
+            svgStyle: {width: '100%', height: '100%'},
+            text: {
+                style: {
+                    // Text color.
+                    // Default: same as stroke color (options.color)
+                    color: '#f1f1f1',
+                    position: 'absolute',
+                    right: '-60px',
+                    top: '0px',
+                    padding: 0,
+                    margin: 0,
+                    transform: null
+                },
+                autoStyleContainer: false
+            },
+            from: {color: '#FFEA82'},
+            to: {color: '#ED6A5A'},
+            step: (state, bar) => {
+                bar.setText(animator.t+"/"+animator.simulation.endingTime);
+            }
+        });
+    }
+
+    drawBar(time){
+        this.t = time;
+        var progress = time/this.simulation.endingTime;
+        this.bar.set(progress);
     }
 
     loadResources(){
@@ -22,6 +62,7 @@ class Animator{
         this.tree = document.getElementById("tree_pic");
         this.fire = document.getElementById("fire_pic");
         this.droneImage = document.getElementById("drone_pic");
+        this.groundImage = document.getElementById("ground_pic");
     }
 
     getSimulation(endpoint, simulationId){
@@ -50,11 +91,12 @@ class Animator{
         var animator = this;
 
         var t = 1;
-        while (t < this.simulation.endingTime) {
+        while (t <= animator.simulation.endingTime) {
             (function(t) {
                 setTimeout(function() {
                     var instant = animator.findInstant(t);
                     animator.drawInstant(instant, con);
+                    animator.drawBar(t);
                     console.log(instant);
                 }, 2000 * t)
             })(t++)
@@ -79,19 +121,18 @@ class Animator{
             var canvasX = drone.x * con.canvas.width / this.simulation.height;
             var canvasy = con.canvas.height - drone.y * con.canvas.height / this.simulation.height;
             con.drawImage(this.droneImage, canvasX, canvasy, this.cellSize/2, this.cellSize/2);
-            console.log(canvasX + " - "+canvasy);
         }
     }
 
     drawElement(con, element, x, y){
+        con.drawImage(this.groundImage, x*this.cellSize, y*this.cellSize, this.cellSize, this.cellSize);
         var image;
         if(element == 'TREE'){
             image = this.tree;
         }else if(element == "GRASS"){
             image = this.grass;
         }else{
-            image = this.grass;
-            //todo: poner ground
+            return;
         }
         con.drawImage(image, x*this.cellSize, y*this.cellSize, this.cellSize, this.cellSize);
     }
