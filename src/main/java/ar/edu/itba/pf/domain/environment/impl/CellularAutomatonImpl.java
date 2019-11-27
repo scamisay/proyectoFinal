@@ -112,6 +112,11 @@ public class CellularAutomatonImpl implements CellularAutomaton {
                 cell.writeStructuresForNextTurn();
             }
         }
+
+        //todo: compatibilizar el t del ambiente con el dt de los drones
+        for(Drone drone : drones){
+            drone.evolve();
+        }
     }
 
     @Override
@@ -168,6 +173,15 @@ public class CellularAutomatonImpl implements CellularAutomaton {
         }
         return matrix;
     }
+
+    @Override
+    public void addDrone(Drone drone) {
+        //todo: controlar que no se repita el id
+        if(drone != null){
+            drones.add(drone);
+        }
+    }
+
     @Override
     public String printObjects() {
         return printer(cell ->
@@ -225,6 +239,11 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     @Override
     public double generateRandomDouble() {
         return randomGenerator.nextDouble();
+    }
+
+    @Override
+    public List<Drone> getDrones() {
+        return drones;
     }
 
     private Cell getCell(Pair pair) {

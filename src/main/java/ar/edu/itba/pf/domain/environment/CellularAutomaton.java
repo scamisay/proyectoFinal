@@ -1,5 +1,6 @@
 package ar.edu.itba.pf.domain.environment;
 
+import ar.edu.itba.pf.domain.drone.Drone;
 import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.objects.EnvironmentObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
@@ -49,5 +50,9 @@ public interface CellularAutomaton {
 
     double generateRandomDouble();
 
+    List<Drone> getDrones();
+
     <T> Map<Integer, Map<Integer, T>> buildMatrix(Function<Cell, T> transformation);
+
+    void addDrone(Drone drone);
 }
