@@ -179,7 +179,13 @@ public class CellularAutomatonImpl implements CellularAutomaton {
         //todo: controlar que no se repita el id
         if(drone != null){
             drones.add(drone);
+            drone.setAutomaton(this);
         }
+    }
+
+    @Override
+    public Cell getCell(double x, double y) {
+        return getCell((int)Math.floor(x), (int)Math.floor(y));
     }
 
     @Override

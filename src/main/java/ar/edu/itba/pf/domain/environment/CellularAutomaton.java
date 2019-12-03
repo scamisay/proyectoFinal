@@ -55,4 +55,6 @@ public interface CellularAutomaton {
     <T> Map<Integer, Map<Integer, T>> buildMatrix(Function<Cell, T> transformation);
 
     void addDrone(Drone drone);
+
+    Cell getCell(double x, double y);
 }

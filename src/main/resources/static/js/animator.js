@@ -98,7 +98,7 @@ class Animator{
                     animator.drawInstant(instant, con);
                     animator.drawBar(t);
                     console.log(instant);
-                }, 2000 * t)
+                }, 500 * t)
             })(t++)
         }
 

@@ -44,7 +44,7 @@ public class SimulationApiController {
         int size = x*2+1;
         int TREE_HEIGHT = 5;
 
-        int drones = 3;
+        int drones = 5;
         double dronesx = size * .8;
         double dronesdy = size/(drones+1.0);
         List<PairDouble> dronesPositions = IntStream.rangeClosed(1, drones).boxed()
@@ -52,7 +52,7 @@ public class SimulationApiController {
                                         .collect(toList());
 
         CellularAutomaton a = createTreesFireAndDrones(size, size,
-                Arrays.asList(new Pair(2,4)),
+                Arrays.asList(new Pair(2,4), new Pair(5,9)),
                 dronesPositions);
 
         //creo la simulacion

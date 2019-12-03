@@ -357,7 +357,7 @@ public class Cell {
                 .collect(toList());
     }
 
-    private Set<Cell> getNeighbours(){
+    public Set<Cell> getNeighbours(){
         return neighbourOrientations.stream()
                 .map(orientation -> getCellFromOrientation(orientation))
                 .collect(toSet());
