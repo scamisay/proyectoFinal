@@ -3,12 +3,20 @@ package ar.edu.itba.pf.domain.drone;
 
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.impl.Cell;
+import ar.edu.itba.pf.domain.environment.impl.NeighbourOrientation;
 import ar.edu.itba.pf.domain.environment.objects.DroneObject;
-import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+import ar.edu.itba.pf.domain.helper.ValidatorHelper;
 
-import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+
+import static ar.edu.itba.pf.domain.drone.DroneAction.*;
+import static ar.edu.itba.pf.domain.drone.FlyingState.*;
 
 public class Drone implements DroneObject {
+
+    private static final double WATER_CAṔACITY = 15;
+    private static final double WATER_PER_TIME = .5;
 
     private int id;
     private double mass;
@@ -18,46 +26,220 @@ public class Drone implements DroneObject {
     private double energy;
 
     //valores internos
-    private double dt;
-    private Vector2D position;
-    private Vector2D velocity = new Vector2D(0,0);
-    private Vector2D acceleration = new Vector2D(0,0);
-
+    private Cell cell;
+    private Cell target; //celda vecina
+    private int z;
     private CellularAutomaton automaton;
 
     private static final double RADIUS = .5;
 
-    //private Cell cell;
+    private FiniteStateAutomata fsm;
+    private FlyingState state;
 
+    private double temperatureSelector;
+    private FightProgress fightProgress;
 
-    public Drone(int id, double mass, double water, double energy, double dt, double x, double y) {
+    public Drone(int id, double mass, double water, double energy, int height) {
         this.id = id;
         this.mass = mass;
         this.water = water;
         this.energy = energy;
-        this.dt = dt;
-        this.position = new Vector2D(x,y);
+        this.z = height;
+
+        state = LANDED;
+        fsm = new FiniteStateAutomata();
+        fsm.addTransition(LANDED, LAND, LANDED );
+        fsm.addTransition(LANDED, SEARCH_TARGET, TO_TAGET );
+        fsm.addTransition(TO_TAGET, SEARCH_TARGET, TO_TAGET );
+        fsm.addTransition(TO_TAGET, STOP, OVER_TARGET );
+        fsm.addTransition(TO_TAGET, LAND, LANDED );
+        fsm.addTransition(TO_TAGET, FLY, OVER_TARGET );
+        fsm.addTransition(OVER_TARGET, SEARCH_TARGET, TO_TAGET );
+        fsm.addTransition(OVER_TARGET, HOLD, OVER_TARGET );
+        fsm.addTransition(OVER_TARGET, LAND, LANDED );
+        fsm.addTransition(OVER_TARGET, ESCAPE, ON_ESCAPE );
+        fsm.addTransition(ON_ESCAPE, ESCAPE, ON_ESCAPE );
+        fsm.addTransition(ON_ESCAPE, SEARCH_TARGET, TO_TAGET );
+
+
+        this.temperatureSelector = MAX_SELECTOR_VALUE;
     }
 
-    private static final double HEIGHT = 1;
+    private static final double MAX_SELECTOR_VALUE = 1;
+    private static final double MIN_SELECTOR_VALUE = 0;
 
-    public double getZ0() {
-        return -1;
+    public double getTemperatureSelector() {
+        return temperatureSelector;
+    }
+
+    public void setTemperatureSelector(double temperatureSelector) {
+        if(temperatureSelector < MIN_SELECTOR_VALUE || temperatureSelector > MAX_SELECTOR_VALUE){
+            throw new RuntimeException("Selector de temperatura invalido" );
+        }
+        this.temperatureSelector = temperatureSelector;
+    }
+
+    private void land(){
+
+    }
+
+    /**
+     * busqueda por calor que produce un movimiento por paso temporal
+     */
+    private boolean searchTarget(){
+        Cell possibleNextMove = findClosestTarget();
+        if(possibleNextMove != null){
+            cell = possibleNextMove;
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    private double findMaxTemperatureInNeighbours(){
+        return cell.getNeighbours().stream()
+                .mapToDouble(Cell::getTemperature)
+                .max().getAsDouble();
+    }
+
+    private double findAvgTemperatureInNeighbours(){
+        return cell.getNeighbours().stream()
+                .mapToDouble(Cell::getTemperature)
+                .average().getAsDouble();
+    }
+
+    private double findSelectedValue(double selection){
+        double max = findMaxTemperatureInNeighbours();
+        double avg = findAvgTemperatureInNeighbours();
+        return (max-avg)*selection+avg;
+    }
+
+    private Cell findClosestTarget() {
+        double lowerBound = findSelectedValue(temperatureSelector);
+        return cell.getNeighbours().stream()
+                .filter(c -> c.getTemperature() > 0)
+                .filter(c -> c.getTemperature() >= lowerBound)
+                .findAny().orElse(null);
+    }
+
+    private Cell findNeighbourCellOnFire() {
+        double lowerBound = findSelectedValue(temperatureSelector);
+        return cell.getNeighbours().stream()
+                .filter(Cell::isOnfire)
+                .filter(c -> c.getTemperature() > 0)
+                .filter(c -> c.getTemperature() >= lowerBound)
+                .findAny().orElse(null);
+    }
+
+    private void stop(){
+
+    }
+
+    private void fly(){
+
     }
 
     @Override
-    public double getX() {
-        return position.getX();
-    }
+    public double evolve() {
+        DroneAction action = null;
+        switch (state){
+            case LANDED:
+                action = searchTarget() ? SEARCH_TARGET : LAND;
+                break;
+            case TO_TAGET:
+                Cell neighbourOnFire = findNeighbourCellOnFire();
+                if(neighbourOnFire != null){
+                    target = neighbourOnFire;
+                    stop();
+                    action = STOP;
+                }else {
+                    action = searchTarget() ? SEARCH_TARGET : LAND;
+                }
+                break;
+            case OVER_TARGET:
+                if(target.isOnfire()){
+                    if(continueFigthing()){
+                        target.receiveWater(rain());
+                        evaluateFightProgress(target.getMoistureLevel());
+                        action = HOLD;
+                    }else{
+                        action = ESCAPE;
+                    }
+                }else {
+                    action = SEARCH_TARGET;
+                }
+                break;
+            case ON_ESCAPE:
+                if(enoughDistanceFromTarget()){
+                    action = SEARCH_TARGET;
+                }else {
+                    action = walkAwayFromTarget() ? ESCAPE : SEARCH_TARGET;
+                }
+                break;
+        }
 
-    @Override
-    public double getY() {
-        return position.getY();
-    }
-
-    @Override
-    public double getZ() {
+        state = fsm.makeTransition(state, action);
         return 0;
+    }
+
+    private int minDistanceFromTarget = 4;
+    private boolean enoughDistanceFromTarget() {
+        return cell.distanceTo(target) >= minDistanceFromTarget;
+    }
+
+    private NeighbourOrientation escapeOrientation;
+    private boolean walkAwayFromTarget() {
+        if(escapeOrientation == null){
+            escapeOrientation = NeighbourOrientation.fromTo(cell, target);
+        }
+        Cell nextPos = cell.moveInOrientation(escapeOrientation);
+        if(nextPos != null){
+            cell = nextPos;
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    private double winningMinTrend = 8;
+    private double probToGiveUpOnAFight = .15;
+
+    private boolean continueFigthing() {
+        double probGiveUp = automaton.generateRandomDouble();
+        return !(fightProgress != null &&
+                fightProgress.isWinning() &&
+                fightProgress.getTrend() >= winningMinTrend &&
+                probToGiveUpOnAFight >= probGiveUp);
+    }
+
+    private void evaluateFightProgress(double moistureLevel) {
+        if(fightProgress == null){
+            fightProgress = new FightProgress(moistureLevel);
+        }else {
+            fightProgress.evaluate(moistureLevel);
+        }
+    }
+
+    private double rain(){
+        if(water - WATER_PER_TIME >= 0){
+            water -= WATER_PER_TIME;
+        }
+        return WATER_PER_TIME;
+    }
+
+    @Override
+    public int getX() {
+        return cell.getX();
+    }
+
+    @Override
+    public int getY() {
+        return cell.getY();
+    }
+
+    @Override
+    public int getZ() {
+        return z;
     }
 
     @Override
@@ -67,87 +249,23 @@ public class Drone implements DroneObject {
 
     @Override
     public void setCell(Cell cell) {
-      /*  ValidatorHelper.checkNotNull(cell);
-        this.cell = cell;*/
+        ValidatorHelper.checkNotNull(cell);
+        this.cell = cell;
+
+        /**
+         * evito que se inicializen dos drones en la misma posicion
+         */
+        int maxZ = automaton.getDrones().stream()
+                .filter(drone -> drone.getCell().equals(cell))
+                .filter(drone -> drone.getId() != id)
+                .mapToInt(Drone::getZ).max().orElse(0);
+        if(maxZ >= z){
+            z = maxZ + 1;
+        }
     }
 
     public void setAutomaton(CellularAutomaton automaton) {
         this.automaton = automaton;
-    }
-
-    @Override
-    public double evolve() {
-        // x(t+dt) = x(t) + v(t+dt/2)*dt
-        position = position.add( velocity.scalarMultiply(dt) );
-
-        // a(t+dt) = F(v(t+dt/2), x(t+dt)) / m
-        acceleration = calculateForce().scalarMultiply(1/mass);
-
-        // v(t+3*dt/2) = v(t+dt/2) + a(t+dt)*dt
-        velocity = velocity.add(acceleration.scalarMultiply(dt));
-        return 0;
-    }
-
-    /**
-     * Understanding Social-Force Model in Psychological Principles of Collective BehaviorPeng Wang
-     */
-    private Vector2D calculateForce() {
-        Vector2D granularForce = new Vector2D(0,0);
-        double A = 4;
-        double B = 2;
-        Vector2D socialForce = calculateSocialForce( A, B);
-
-        Vector2D target = findClosestTarget();
-
-        double TAU = dt*1;
-        double drivenVelocity = .25;
-
-        Vector2D drivenForce = calculateDrivenForce(drivenVelocity, TAU, target);
-        return granularForce.add(socialForce).add(drivenForce);
-    }
-
-    private Vector2D findClosestTarget() {
-        Cell currentCell = automaton.getCell(position.getX(), position.getY());
-
-        Cell hotestCell = currentCell.getNeighbours().stream()
-                .sorted(Comparator.comparing(Cell::getTemperature)).reduce((first, second) -> second).get();
-
-        return new Vector2D(hotestCell.getX(),hotestCell.getY());
-    }
-
-    /**
-     *
-     * @param drivenVelocity
-     * @param tau certain time interval
-     * @param target
-     * @return
-     */
-    private Vector2D calculateDrivenForce(double drivenVelocity, double tau, Vector2D target) {
-        Vector2D e_target = target.subtract(position).normalize();
-        return e_target.scalarMultiply(drivenVelocity)
-                .subtract(velocity)
-                .scalarMultiply(mass/tau);
-    }
-
-    private Vector2D calculateSocialForce(Double A, Double B) {
-        /*return automaton.getDrones().stream()
-                .filter(d -> d.getId() != id)
-                .filter(d->overlapping(d)>0)
-                .map( drone -> getNormalVersor(drone).scalarMultiply(-A*Math.exp(-overlapping(drone)/B)))
-                .reduce( (v1,v2) -> v1.add(v2)).orElse(new Vector2D(0,0));*/
-        return automaton.getDrones().stream()
-                .filter(d -> d.getId() != id)
-                .map( drone -> getNormalVersor(drone)
-                        .scalarMultiply(-A*Math.exp(-drone.getPosition().subtract(position).getNorm()/B)))
-                .reduce( (v1,v2) -> v1.add(v2)).orElse(new Vector2D(0,0));
-    }
-
-    private double overlapping(Drone other) {
-        return getPosition().distance(other.getPosition()) - 2*RADIUS;
-    }
-
-    private Vector2D getNormalVersor(Drone other) {
-        return other.getPosition().subtract(position).normalize();
     }
 
     @Override
@@ -171,7 +289,59 @@ public class Drone implements DroneObject {
         return energy;
     }
 
-    public Vector2D getPosition() {
-        return position;
+    public Cell getCell() {
+        return cell;
     }
+
+    class FiniteStateAutomata{
+        private Map<FlyingState, Map<DroneAction, FlyingState>> states = new HashMap<>();
+
+        public void addTransition(FlyingState inState, DroneAction action, FlyingState outState){
+            if( !states.containsKey(inState) ) {
+                Map<DroneAction, FlyingState> map = new HashMap<>();
+                map.put(action, outState);
+                states.put(inState, map);
+            }else{
+                states.get(inState).put(action, outState);
+            }
+        }
+
+        public FlyingState makeTransition(FlyingState inState, DroneAction action){
+            if(states.containsKey(inState) && states.get(inState).containsKey(action)){
+                return states.get(inState).get(action);
+            }else {
+                throw new RuntimeException("Invalid Drone Transition");
+            }
+        }
+    }
+
+    class FightProgress{
+        private int trend;
+        private boolean winning;
+        private double previousValue;
+
+        public FightProgress(double moistureLevel) {
+            previousValue = moistureLevel;
+        }
+
+        public int getTrend() {
+            return trend;
+        }
+
+        public boolean isWinning() {
+            return winning;
+        }
+
+        void evaluate(double currentValue){
+            boolean result = currentValue < previousValue;
+            previousValue = currentValue;
+            if(result != winning){
+                winning = result;
+                trend = 1;
+            }else {
+                trend++;
+            }
+        }
+    }
+
 }

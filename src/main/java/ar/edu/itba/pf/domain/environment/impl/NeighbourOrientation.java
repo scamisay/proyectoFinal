@@ -37,6 +37,10 @@ public enum NeighbourOrientation {
                 .findFirst().get();
     }
 
+    public static NeighbourOrientation fromTo(Cell from, Cell to) {
+        return findByPosition(to.getX() - from.getX(), to.getY() - from.getY());
+    }
+
     public NeighbourOrientation invert() {
         return findByPosition(x*-1, y*-1);
     }
@@ -48,4 +52,5 @@ public enum NeighbourOrientation {
     public PairDouble getPair() {
         return new PairDouble(x,y);
     }
+
 }

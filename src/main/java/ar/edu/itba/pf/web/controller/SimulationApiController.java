@@ -5,7 +5,6 @@ import ar.edu.itba.pf.domain.engine.Evolver;
 import ar.edu.itba.pf.domain.engine.impl.EvolverImpl;
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.Pair;
-import ar.edu.itba.pf.domain.environment.PairDouble;
 import ar.edu.itba.pf.domain.environment.impl.Cell;
 import ar.edu.itba.pf.domain.environment.impl.CellularAutomatonImpl;
 import ar.edu.itba.pf.domain.environment.objects.GroundObject;
@@ -13,7 +12,7 @@ import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
 import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
 import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
 import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
-import ar.edu.itba.pf.web.domain.DroneInfo;
+import ar.edu.itba.pf.web.domain.DroneGroup;
 import ar.edu.itba.pf.web.domain.Simulation;
 import ar.edu.itba.pf.web.domain.SimulationInstant;
 import ar.edu.itba.pf.web.service.SimulationService;
@@ -39,28 +38,31 @@ public class SimulationApiController {
     @GetMapping("create")
     public void createSimulation(){
 
-        int x=5;
+        int x=10;
         int y=x;
         int size = x*2+1;
         int TREE_HEIGHT = 5;
 
-        int drones = 5;
-        double dronesx = size * .8;
-        double dronesdy = size/(drones+1.0);
-        List<PairDouble> dronesPositions = IntStream.rangeClosed(1, drones).boxed()
-                                        .map(i -> new PairDouble(dronesx,i*dronesdy))
+        int drones = 25;
+        int dronesx = size -1;
+        List<Pair> dronesPositions = IntStream.rangeClosed(1, drones).boxed()
+                                        .map(i -> new Pair(dronesx,i%size))
                                         .collect(toList());
 
         CellularAutomaton a = createTreesFireAndDrones(size, size,
-                Arrays.asList(new Pair(2,4), new Pair(5,9)),
-                dronesPositions);
+                Arrays.asList(new Pair(2,4), new Pair(5,9), new Pair(2,14), new Pair(0,9)
+        ,new Pair(10,9) ,new Pair(10,4) ,new Pair(10,14)
+                ),
+                dronesPositions,
+                .2);
 
         //creo la simulacion
         Simulation simulation = new Simulation(a.getWidth(), a.getHeight());
         simulationService.createSimulation(simulation);
 
         //seteo el guardado de momentos evolucionados
-        Evolver e = new EvolverImpl(a, c -> c.getTime() > 60);
+        //Evolver e = new EvolverImpl(a, c -> c.getTime() > 110);
+        Evolver e = new EvolverImpl(a, c -> !c.isOnFire());
         e.setTimeConsumer( aut -> {
             SimulationInstant instant = new SimulationInstant(
                     simulation.getId(),
@@ -68,7 +70,15 @@ public class SimulationApiController {
                     aut.buildMatrix( c->c.getTopFieldObject() ));
 
             instant.setFires( aut.buildMatrix( c->c.getTopFireIfExists() ) );
-            instant.setDrones( aut.getDrones().stream().map(DroneInfo::new).collect(toList()));
+
+            List<DroneGroup> droneGroups =
+                    aut.getDrones().stream()
+                    .collect(Collectors.groupingBy( Drone::getCell, Collectors.toList() ))
+                    .entrySet().stream()
+                    .map(entry -> new DroneGroup(entry.getKey().getX(), entry.getKey().getY(), entry.getValue()))
+                    .collect(Collectors.toList());
+
+            instant.setDroneGroups( droneGroups );
             simulationService.addInstant(instant);
         });
 
@@ -119,13 +129,14 @@ public class SimulationApiController {
 
     private CellularAutomaton createTreesFireAndDrones(int width, int height,
                                                        List<Pair> treesPositions,
-                                                       List<PairDouble> dronesPositions) {
+                                                       List<Pair> dronesPositions,
+                                                       double temperatureSelector) {
         int TREE_HEIGHT = 5;
         CellularAutomaton cellularAutomaton = createScenario(width, height);
         cellularAutomaton.iterate().forEach( pair -> {
             if(treesPositions.contains(pair)){
                 CombustibleObject combustibleObject = new TreeCO(10,100, TREE_HEIGHT);
-                combustibleObject.setOnFire();
+                combustibleObject.setFireOn();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }
 
@@ -134,9 +145,10 @@ public class SimulationApiController {
         double droneMass = 50;
         double droneWater = 30;
         double droneEnergy = 100;
-        for(PairDouble position : dronesPositions){
-            Drone drone = new Drone(++droneId, droneMass, droneWater, droneEnergy, 1, position.x,position.y);
-            cellularAutomaton.addDrone(drone);
+        for(Pair position : dronesPositions){
+            Drone drone = new Drone(++droneId, droneMass, droneWater, droneEnergy, 1);
+            drone.setTemperatureSelector(temperatureSelector);
+            cellularAutomaton.addDrone( position.x,position.y, drone);
         }
         return cellularAutomaton;
     }
@@ -146,7 +158,7 @@ public class SimulationApiController {
         cellularAutomaton.iterate().forEach( pair -> {
             if(treesPositions.contains(pair)){
                 CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
-                combustibleObject.setOnFire();
+                combustibleObject.setFireOn();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {
                 cellularAutomaton.addElement(pair, new GrassCO(1,5));

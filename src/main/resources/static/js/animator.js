@@ -112,16 +112,36 @@ class Animator{
             }
         }
 
-        this.drawDrones(con, instant.drones);
+        this.drawDrones(con, instant.droneGroups);
     }
 
-    drawDrones(con, drones){
-        for(var index in drones){
-            var drone = drones[index];
-            var canvasX = drone.x * con.canvas.width / this.simulation.height;
-            var canvasy = con.canvas.height - drone.y * con.canvas.height / this.simulation.height;
-            con.drawImage(this.droneImage, canvasX, canvasy, this.cellSize/2, this.cellSize/2);
+    drawDrones(con, droneGroups){
+        for(var index in droneGroups){
+            var group = droneGroups[index];
+            this.drawDroneGroup(con,group);
         }
+    }
+
+    drawDroneGroup(con, droneGroup){
+        var y = this.simulation.height - droneGroup.y - 1
+        var groupSize = droneGroup.list.length;
+        var offset = (this.cellSize*.7)/groupSize;
+
+        if(groupSize > 1){
+            con.strokeText(groupSize,droneGroup.x*this.cellSize, y*this.cellSize);
+        }
+
+        for(var index in droneGroup.list){
+            var drone = droneGroup.list[index];
+            this.drawDrone(con,drone, droneGroup.x, y, index*offset);
+        }
+    }
+
+    drawDrone(con, drone, x, y, offset){
+        con.drawImage(this.droneImage,
+            x*this.cellSize + offset,
+            y*this.cellSize + offset,
+            this.cellSize/2, this.cellSize/2);
     }
 
     drawElement(con, element, x, y){

@@ -197,7 +197,7 @@ public class CellTest {
                 new WorldPart(0, x, size, x, b -> new GrassCO(1,5)),
                 new WorldPart(x, 0, 1,1, b -> {
                     CombustibleObject combustibleObject = new TreeCO(10,100, TREE_HEIGHT);
-                    combustibleObject.setOnFire();
+                    combustibleObject.setFireOn();
                     return combustibleObject;
                 }));
         Evolver e = new EvolverImpl(a, c -> c.getTime() > 7);
@@ -300,7 +300,7 @@ public class CellTest {
         cellularAutomaton.iterate().forEach( pair -> {
             if(pair.x == treeX && pair.y==treeY){
                 CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
-                combustibleObject.setOnFire();
+                combustibleObject.setFireOn();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {
                 cellularAutomaton.addElement(pair, new GrassCO(1,5));
@@ -322,7 +322,7 @@ public class CellTest {
         cellularAutomaton.iterate().forEach( pair -> {
             if(pair.x == treeX && pair.y==treeY){
                 CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
-                combustibleObject.setOnFire();
+                combustibleObject.setFireOn();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }
         });
@@ -334,7 +334,7 @@ public class CellTest {
         cellularAutomaton.iterate().forEach( pair -> {
             if(treesPositions.contains(pair)){
                 CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
-                combustibleObject.setOnFire();
+                combustibleObject.setFireOn();
                 cellularAutomaton.addElement(pair, combustibleObject);
             }else {
                 cellularAutomaton.addElement(pair, new GrassCO(1,5));

@@ -18,7 +18,7 @@ public class SimulationInstant {
 
     private Map<Integer, Map<Integer, String>> fires;
 
-    private List<DroneInfo> drones;
+    private List<DroneGroup> droneGroups;
 
     public SimulationInstant(long simulationId, Long time, Map<Integer, Map<Integer, String>> objects) {
         this.time = time;
@@ -30,7 +30,7 @@ public class SimulationInstant {
         this.fires = fires;
     }
 
-    public void setDrones(List<DroneInfo> drones) {
-        this.drones = drones;
+    public void setDroneGroups(List<DroneGroup> droneGroups) {
+        this.droneGroups = droneGroups;
     }
 }

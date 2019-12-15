@@ -27,6 +27,7 @@ public class Cell {
     private double ashes = 0;
     private PairDouble wind;
     private List<ActionByTurn> actionsByTurn = new ArrayList<>();
+    private double accumulatedWater;
 
     /**
      * Vecinos validos para esta celula
@@ -165,7 +166,14 @@ public class Cell {
             double temperatureGenerated = combustibleObject.evolve();
             spreadHeat(temperatureGenerated);
         }
+        /**
+         * reinicio la acumulacion de agua que fue recibida durante el turno
+         */
+        accumulatedWater = 0;
+    }
 
+    public boolean isOnfire(){
+        return !getCombustibleObjects().isEmpty() && getCombustibleObjects().get(0).isOnFire();
     }
 
     private boolean evalProbabilityToFireForAshes() {
@@ -252,7 +260,7 @@ public class Cell {
         getCombustibleObjects()
                 .stream()
                 .findFirst()
-                .ifPresent(CombustibleObject::setOnFire);
+                .ifPresent(CombustibleObject::setFireOn);
     }
 
     private void transferHeatToNeighbourCell(NeighbourOrientation neighbourOrientation, double heat){
@@ -391,5 +399,32 @@ public class Cell {
 
     public String getTopFireIfExists(){
         return hasCombustibleObject() && getCombustibleObjects().get(0).isOnFire() ? "F" : null;
+    }
+
+    public void receiveWater(double water) {
+        accumulatedWater += water;
+    }
+
+    public double getAccumulatedWater() {
+        return accumulatedWater;
+    }
+
+    public double getMoistureLevel(){
+        if(getCombustibleObjects().isEmpty()){
+            return 0;
+        }
+
+        return getCombustibleObjects().get(0).getMoistureLevel();
+    }
+
+    public int distanceTo(Cell cell) {
+        return Math.abs(this.x - cell.getX()) + Math.abs(this.y - cell.getY()) ;
+    }
+
+    public Cell moveInOrientation(NeighbourOrientation escapeOrientation) {
+        return getNeighbours().stream()
+                .filter(n -> n.getX() == x + escapeOrientation.x)
+                .filter(n -> n.getY() == y + escapeOrientation.y)
+                .findAny().orElse(null);
     }
 }

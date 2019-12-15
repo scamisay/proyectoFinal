@@ -4,7 +4,7 @@ import ar.edu.itba.pf.domain.environment.impl.Cell;
 
 public interface EnvironmentObject {
 
-    double getZ();
+    int getZ();
 
     String getStringRepresentarion();
 

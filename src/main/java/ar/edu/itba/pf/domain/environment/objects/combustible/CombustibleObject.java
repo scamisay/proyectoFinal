@@ -10,14 +10,14 @@ import static ar.edu.itba.pf.domain.environment.impl.Cell.MAX_WIND_SPEED_TOLERAN
 
 public abstract class CombustibleObject implements EnvironmentObject {
 
-    private double z;
+    private int z;
     private double mass;
     private double combustionPerTime;
     private boolean onFire;
     private double height;
     private Cell cell;
 
-    public CombustibleObject(double z, double mass, double combustionByAreaPerTime, double height) {
+    public CombustibleObject(int z, double mass, double combustionByAreaPerTime, double height) {
         this.z = z;
         this.mass = mass;
         this.height = height;
@@ -25,7 +25,7 @@ public abstract class CombustibleObject implements EnvironmentObject {
     }
 
     @Override
-    public double getZ() {
+    public int getZ() {
         return z;
     }
 
@@ -33,7 +33,7 @@ public abstract class CombustibleObject implements EnvironmentObject {
         return onFire;
     }
 
-    public void setOnFire(){
+    public void setFireOn(){
         onFire = true;
     }
 
@@ -46,6 +46,11 @@ public abstract class CombustibleObject implements EnvironmentObject {
      */
     public double consume(){
         double heat = 0;
+
+        calculateMoistureLevel();
+        if(moistureLevel <= 0){
+            setFireOff();
+        }
 
         if(cell.getWind().getModule() > MAX_WIND_SPEED_TOLERANCE_FOR_BURNING){
             setFireOff();
@@ -63,6 +68,34 @@ public abstract class CombustibleObject implements EnvironmentObject {
         return heat;
     }
 
+    private static final double DRY_LEVEL = 100;
+    private double moistureLevel = DRY_LEVEL;
+    protected void calculateMoistureLevel(){
+        moistureLevel = moistureLevel + generatedDryByHeat() - cell.getAccumulatedWater();
+        if(moistureLevel > DRY_LEVEL ){
+            moistureLevel = DRY_LEVEL;
+        }else if(moistureLevel < 0){
+            moistureLevel = 0;
+        }
+    }
+
+    public double getMoistureLevel() {
+        return moistureLevel;
+    }
+
+    //me quedo con el 1% del calor generado
+    private double generatedDryByHeat(){
+        if(cell.getTemperature() > 0){
+            return cell.getTemperature() * .01;
+        }else {
+            return generateHeat() * .005;
+        }
+    }
+
+    private double getMoistureLevelIndex(){
+        return moistureLevel/DRY_LEVEL;
+    }
+
     private void setFireOff(){
         onFire = false;
     }
@@ -70,7 +103,7 @@ public abstract class CombustibleObject implements EnvironmentObject {
      * LABEL: HEAT PROPAGATION
      */
     private double generateHeat() {
-        return TEMPERATURE_FOR_A_METER_BY_TIME * height;
+        return TEMPERATURE_FOR_A_METER_BY_TIME * height * getMoistureLevelIndex();
     }
 
     @Override

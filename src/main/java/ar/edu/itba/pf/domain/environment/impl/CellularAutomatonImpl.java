@@ -69,6 +69,16 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     }
 
     @Override
+    public void addDrone(int x, int y, Drone drone) {
+        //todo: controlar que no se repita el id
+        if(drone != null){
+            drones.add(drone);
+            drone.setAutomaton(this);
+            drone.setCell(cells[x][y]);
+        }
+    }
+
+    @Override
     public void addWindStrategy(WindStrategy windStrategy) {
         this.windStrategy = windStrategy;
     }
@@ -172,15 +182,6 @@ public class CellularAutomatonImpl implements CellularAutomaton {
             }
         }
         return matrix;
-    }
-
-    @Override
-    public void addDrone(Drone drone) {
-        //todo: controlar que no se repita el id
-        if(drone != null){
-            drones.add(drone);
-            drone.setAutomaton(this);
-        }
     }
 
     @Override

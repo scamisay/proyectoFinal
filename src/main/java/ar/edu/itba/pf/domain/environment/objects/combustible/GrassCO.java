@@ -5,7 +5,7 @@ public class GrassCO extends CombustibleObject {
     private final static double COMBUSTION_PER_TIME = .1;
     private final static double HEIGHT = .7;//en metros
 
-    public GrassCO(double z, double mass) {
+    public GrassCO(int z, double mass) {
         super(z, mass, COMBUSTION_PER_TIME, HEIGHT);
     }
 

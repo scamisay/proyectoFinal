@@ -4,14 +4,14 @@ import ar.edu.itba.pf.domain.environment.impl.Cell;
 
 public class GroundObject implements FieldObject {
 
-    private double z;
+    private int z;
 
-    public GroundObject(double z) {
+    public GroundObject(int z) {
         this.z = z;
     }
 
     @Override
-    public double getZ() {
+    public int getZ() {
         return z;
     }
 

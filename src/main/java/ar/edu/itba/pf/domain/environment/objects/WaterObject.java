@@ -4,14 +4,14 @@ import ar.edu.itba.pf.domain.environment.impl.Cell;
 
 public class WaterObject implements FieldObject {
 
-    private double z;
+    private int z;
 
-    public WaterObject(double z) {
+    public WaterObject(int z) {
         this.z = z;
     }
 
     @Override
-    public double getZ() {
+    public int getZ() {
         return z;
     }
 
