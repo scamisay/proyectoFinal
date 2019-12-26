@@ -2,6 +2,9 @@ package ar.edu.itba.pf.web.domain;
 
 import org.springframework.data.annotation.Id;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Simulation {
 
     @Id
@@ -10,6 +13,8 @@ public class Simulation {
     private int width;
     private int height;
     private long endingTime;
+
+    List<SimulationInstant> instants = new ArrayList<>();
 
     public Simulation(int width, int height) {
         this.width = width;
@@ -38,5 +43,13 @@ public class Simulation {
 
     public void setEndingTime(long endingTime) {
         this.endingTime = endingTime;
+    }
+
+    public void addInstants(List<SimulationInstant> instants) {
+        this.instants = instants;
+    }
+
+    public List<SimulationInstant> getInstants() {
+        return instants;
     }
 }

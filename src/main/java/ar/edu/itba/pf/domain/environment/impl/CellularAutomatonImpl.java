@@ -190,6 +190,17 @@ public class CellularAutomatonImpl implements CellularAutomaton {
     }
 
     @Override
+    public double getTotalTemperature() {
+        double totalTemperature = 0;
+        for(int y = height-1; y >= 0; y--){
+            for(int x = 0; x<width; x++){
+                totalTemperature += cells[x][y].getTemperature();
+            }
+        }
+        return totalTemperature;
+    }
+
+    @Override
     public String printObjects() {
         return printer(cell ->
                 cell.getObjects()

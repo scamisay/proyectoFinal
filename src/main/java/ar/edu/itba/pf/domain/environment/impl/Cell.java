@@ -1,6 +1,7 @@
 package ar.edu.itba.pf.domain.environment.impl;
 
 
+import ar.edu.itba.pf.domain.drone.FlyingState;
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.PairDouble;
 import ar.edu.itba.pf.domain.environment.action.ActionByTurn;
@@ -51,7 +52,7 @@ public class Cell {
     /**
      * constants
      */
-    public static final double RADIATION_PROPOTION_PROPAGATION_PER_CELL = .5;
+    public static final double RADIATION_PROPOTION_PROPAGATION_PER_CELL = .33;
     public static final double NORMAL_TEMPERATURE = 0;
     public static final double TEMPERATURE_FOR_A_METER_BY_TIME = 50;
     public static final double MAX_WIND_SPEED_TOLERANCE_FOR_BURNING = 200;
@@ -172,6 +173,7 @@ public class Cell {
         accumulatedWater = 0;
     }
 
+    //todo: agregar control para saber si pudo clasificar el incendio por sensores
     public boolean isOnfire(){
         return !getCombustibleObjects().isEmpty() && getCombustibleObjects().get(0).isOnFire();
     }
@@ -205,6 +207,20 @@ public class Cell {
             }
         }
         return actions;
+    }
+
+    public long getNumberOfDronesFlying(){
+        return cellularAutomaton.getDrones().stream()
+                .filter(d -> !d.getState().equals(FlyingState.LANDED))
+                .filter(d -> d.getCell().equals(this))
+                .count();
+    }
+
+    public long getNumberOfDronesFighting(){
+        return cellularAutomaton.getDrones().stream()
+                .filter(d -> d.getState().equals(FlyingState.OVER_TARGET))
+                .filter(d -> d.getCell().equals(this))
+                .count();
     }
 
     public boolean hasCombustibleObject(){
@@ -426,5 +442,11 @@ public class Cell {
                 .filter(n -> n.getX() == x + escapeOrientation.x)
                 .filter(n -> n.getY() == y + escapeOrientation.y)
                 .findAny().orElse(null);
+    }
+
+    public boolean isTemperatureLocalMax() {
+        return getNeighbours().stream()
+                .filter(c->c.getTemperature() >= getTemperature())
+                .count() == 0;
     }
 }

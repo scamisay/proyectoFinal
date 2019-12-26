@@ -6,19 +6,18 @@ import ar.edu.itba.pf.domain.engine.impl.EvolverImpl;
 import ar.edu.itba.pf.domain.environment.CellularAutomaton;
 import ar.edu.itba.pf.domain.environment.Pair;
 import ar.edu.itba.pf.domain.environment.impl.Cell;
-import ar.edu.itba.pf.domain.environment.impl.CellularAutomatonImpl;
-import ar.edu.itba.pf.domain.environment.objects.GroundObject;
-import ar.edu.itba.pf.domain.environment.objects.combustible.CombustibleObject;
-import ar.edu.itba.pf.domain.environment.objects.combustible.GrassCO;
-import ar.edu.itba.pf.domain.environment.objects.combustible.TreeCO;
 import ar.edu.itba.pf.domain.environment.windengine.impl.PolarWind;
+import ar.edu.itba.pf.web.SimulationUtil;
 import ar.edu.itba.pf.web.domain.DroneGroup;
 import ar.edu.itba.pf.web.domain.Simulation;
 import ar.edu.itba.pf.web.domain.SimulationInstant;
 import ar.edu.itba.pf.web.service.SimulationService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,18 +42,22 @@ public class SimulationApiController {
         int size = x*2+1;
         int TREE_HEIGHT = 5;
 
-        int drones = 25;
+        int drones = 120;
         int dronesx = size -1;
         List<Pair> dronesPositions = IntStream.rangeClosed(1, drones).boxed()
                                         .map(i -> new Pair(dronesx,i%size))
                                         .collect(toList());
+        double temperatureSelector = .2;
+        int minDistanceFromTarget = 4;
+        double winningMinTrend = 8;
+        double probToGiveUpOnAFight = .15;
 
-        CellularAutomaton a = createTreesFireAndDrones(size, size,
+        CellularAutomaton a = new SimulationUtil().createTreesFireAndDrones(size, size,
                 Arrays.asList(new Pair(2,4), new Pair(5,9), new Pair(2,14), new Pair(0,9)
         ,new Pair(10,9) ,new Pair(10,4) ,new Pair(10,14)
                 ),
-                dronesPositions,
-                .2);
+                dronesPositions, temperatureSelector, minDistanceFromTarget, winningMinTrend, probToGiveUpOnAFight
+                );
 
         //creo la simulacion
         Simulation simulation = new Simulation(a.getWidth(), a.getHeight());
@@ -67,7 +70,9 @@ public class SimulationApiController {
             SimulationInstant instant = new SimulationInstant(
                     simulation.getId(),
                     aut.getTime(),
-                    aut.buildMatrix( c->c.getTopFieldObject() ));
+                    aut.buildMatrix( c->c.getTopFieldObject() ),
+                    aut.getTotalTemperature()
+            );
 
             instant.setFires( aut.buildMatrix( c->c.getTopFireIfExists() ) );
 
@@ -90,11 +95,6 @@ public class SimulationApiController {
         simulation.setEndingTime(a.getTime());
         simulationService.updateSimulation(simulation);
 
-        Cell north = a.getCell(x,y+1);
-        Cell south = a.getCell( x, y-1);
-        Cell west = a.getCell(x-1,y);
-        Cell east = a.getCell(x+1,y);
-
     }
 
     @GetMapping("findSimulation")
@@ -108,63 +108,6 @@ public class SimulationApiController {
             @RequestParam(value = "from") long from,
             @RequestParam(value = "offset") long offset ){
         return new Gson().toJson( simulationService.findInstantsByRange(simulationId, from, offset));
-    }
-
-
-    //todo: hacer libreria
-
-    CellularAutomaton createCellularAutomaton(int width, int height){
-        return new CellularAutomatonImpl(width,height);
-    }
-
-    private CellularAutomaton createScenario(int width, int height){
-        CellularAutomaton cellularAutomaton = createCellularAutomaton(width,height);
-        for(int x = 0; x<width; x++){
-            for(int y = 0; y < height; y++){
-                cellularAutomaton.addElement(x,y,new GroundObject(2));
-            }
-        }
-        return cellularAutomaton;
-    }
-
-    private CellularAutomaton createTreesFireAndDrones(int width, int height,
-                                                       List<Pair> treesPositions,
-                                                       List<Pair> dronesPositions,
-                                                       double temperatureSelector) {
-        int TREE_HEIGHT = 5;
-        CellularAutomaton cellularAutomaton = createScenario(width, height);
-        cellularAutomaton.iterate().forEach( pair -> {
-            if(treesPositions.contains(pair)){
-                CombustibleObject combustibleObject = new TreeCO(10,100, TREE_HEIGHT);
-                combustibleObject.setFireOn();
-                cellularAutomaton.addElement(pair, combustibleObject);
-            }
-
-        });
-        int droneId = 1;
-        double droneMass = 50;
-        double droneWater = 30;
-        double droneEnergy = 100;
-        for(Pair position : dronesPositions){
-            Drone drone = new Drone(++droneId, droneMass, droneWater, droneEnergy, 1);
-            drone.setTemperatureSelector(temperatureSelector);
-            cellularAutomaton.addDrone( position.x,position.y, drone);
-        }
-        return cellularAutomaton;
-    }
-
-    private CellularAutomaton createManyTreesOnFireAndGrass(int width, int height, List<Pair> treesPositions, int treeHeight){
-        CellularAutomaton cellularAutomaton = createScenario(width, height);
-        cellularAutomaton.iterate().forEach( pair -> {
-            if(treesPositions.contains(pair)){
-                CombustibleObject combustibleObject = new TreeCO(10,100, treeHeight);
-                combustibleObject.setFireOn();
-                cellularAutomaton.addElement(pair, combustibleObject);
-            }else {
-                cellularAutomaton.addElement(pair, new GrassCO(1,5));
-            }
-        });
-        return cellularAutomaton;
     }
 
 }

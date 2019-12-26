@@ -17,6 +17,7 @@ public class Drone implements DroneObject {
 
     private static final double WATER_CAṔACITY = 15;
     private static final double WATER_PER_TIME = .5;
+    private static final long MAX_DRONES_PER_CELL = 4;
 
     private int id;
     private double mass;
@@ -38,6 +39,7 @@ public class Drone implements DroneObject {
 
     private double temperatureSelector;
     private FightProgress fightProgress;
+    private long maxDronesPerCell = MAX_DRONES_PER_CELL;
 
     public Drone(int id, double mass, double water, double energy, int height) {
         this.id = id;
@@ -77,6 +79,11 @@ public class Drone implements DroneObject {
             throw new RuntimeException("Selector de temperatura invalido" );
         }
         this.temperatureSelector = temperatureSelector;
+    }
+
+    public void setMaxDronesPerCell(long maxDronesPerCell) {
+        ValidatorHelper.checkPositive(maxDronesPerCell);
+        this.maxDronesPerCell = maxDronesPerCell;
     }
 
     private void land(){
@@ -119,6 +126,7 @@ public class Drone implements DroneObject {
         return cell.getNeighbours().stream()
                 .filter(c -> c.getTemperature() > 0)
                 .filter(c -> c.getTemperature() >= lowerBound)
+                .filter(c -> c.getNumberOfDronesFlying() < maxDronesPerCell)
                 .findAny().orElse(null);
     }
 
@@ -128,6 +136,8 @@ public class Drone implements DroneObject {
                 .filter(Cell::isOnfire)
                 .filter(c -> c.getTemperature() > 0)
                 .filter(c -> c.getTemperature() >= lowerBound)
+                .filter(c -> c.getNumberOfDronesFighting() < maxDronesPerCell)
+                .filter(Cell::isTemperatureLocalMax)
                 .findAny().orElse(null);
     }
 
@@ -157,7 +167,8 @@ public class Drone implements DroneObject {
                 }
                 break;
             case OVER_TARGET:
-                if(target.isOnfire()){
+                //todo: comparar calificacion: target.isOnfire()
+                if(target.isTemperatureLocalMax()){
                     if(continueFigthing()){
                         target.receiveWater(rain());
                         evaluateFightProgress(target.getMoistureLevel());
@@ -182,12 +193,21 @@ public class Drone implements DroneObject {
         return 0;
     }
 
+    public FlyingState getState() {
+        return state;
+    }
+
     private int minDistanceFromTarget = 4;
     private boolean enoughDistanceFromTarget() {
         return cell.distanceTo(target) >= minDistanceFromTarget;
     }
 
     private NeighbourOrientation escapeOrientation;
+
+    /**
+     * Se aleja en orientacion al objetivo siempre que haya espacio en el ambiente para hacerlo
+     * @return devuelve si logro moverse
+     */
     private boolean walkAwayFromTarget() {
         if(escapeOrientation == null){
             escapeOrientation = NeighbourOrientation.fromTo(cell, target);
@@ -313,6 +333,18 @@ public class Drone implements DroneObject {
                 throw new RuntimeException("Invalid Drone Transition");
             }
         }
+    }
+
+    public void setMinDistanceFromTarget(int minDistanceFromTarget) {
+        this.minDistanceFromTarget = minDistanceFromTarget;
+    }
+
+    public void setWinningMinTrend(double winningMinTrend) {
+        this.winningMinTrend = winningMinTrend;
+    }
+
+    public void setProbToGiveUpOnAFight(double probToGiveUpOnAFight) {
+        this.probToGiveUpOnAFight = probToGiveUpOnAFight;
     }
 
     class FightProgress{

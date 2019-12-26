@@ -20,10 +20,16 @@ public class SimulationInstant {
 
     private List<DroneGroup> droneGroups;
 
-    public SimulationInstant(long simulationId, Long time, Map<Integer, Map<Integer, String>> objects) {
+    private double totalTemperature;
+
+    public SimulationInstant(long simulationId,
+                             Long time,
+                             Map<Integer, Map<Integer, String>> objects,
+                             double totalTemperature) {
         this.time = time;
         this.simulationId = simulationId;
         this.objects = objects;
+        this.totalTemperature = totalTemperature;
     }
 
     public void setFires(Map<Integer, Map<Integer, String>> fires) {
@@ -32,5 +38,9 @@ public class SimulationInstant {
 
     public void setDroneGroups(List<DroneGroup> droneGroups) {
         this.droneGroups = droneGroups;
+    }
+
+    public List<DroneGroup> getDroneGroups() {
+        return droneGroups;
     }
 }

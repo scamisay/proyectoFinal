@@ -57,4 +57,6 @@ public interface CellularAutomaton {
     void addDrone(int x, int y,Drone drone);
 
     Cell getCell(double x, double y);
+
+    double getTotalTemperature();
 }
